@@ -205,6 +205,26 @@ int ssandPile_do_tile_default(int x, int y, int width, int height)
   return diff;
 }
 
+int ssandPile_do_tile_opt(int x, int y, int width, int height)
+{
+  int diff = 0;
+
+  for (int i = y; i < y + height; i++)
+    for (int j = x; j < x + width; j++)
+    {
+      int result = table(in, i, j) % 4;
+      result += table(in, i + 1, j) / 4;
+      result += table(in, i - 1, j) / 4;
+      result += table(in, i, j + 1) / 4;
+      result += table(in, i, j - 1) / 4;
+      table(out, i, j) = result;
+      if (result >= 4)
+        diff = 1;
+    }
+
+  return diff;
+}
+
 // Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
 unsigned ssandPile_compute_seq(unsigned nb_iter)
 {
@@ -283,6 +303,28 @@ int asandPile_do_tile_default(int x, int y, int width, int height)
         atable(i, j) %= 4;
         change = 1;
       }
+  return change;
+}
+
+int asandPile_do_tile_opt(int x, int y, int width, int height)
+{
+  int change = 0;
+
+  for (int i = y; i < y + height; i++)
+    for (int j = x; j < x + width; j++)
+    {
+      int result = atable(i, j);
+      if (result >= 4)
+      {
+        result/=4;
+        atable(i, j - 1) += result;
+        atable(i, j + 1) += result;
+        atable(i - 1, j) += result;
+        atable(i + 1, j) += result;
+        atable(i, j) %= 4;
+        change = 1;
+      }
+    }
   return change;
 }
 

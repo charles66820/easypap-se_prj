@@ -31,8 +31,8 @@ easypapOptions["-tw "] = [32, 64, 128, 256, 512]
 easypapOptions = {
     "-k ": ["ssandPile"],
     "-i ": [10],
-    "-v ": ["omp"],
     "-s ": [512],
+    "-of ": ["ssand-omp.csv"]
 }
 ompICV = {"OMP_NUM_THREADS=": [1]}
 execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")

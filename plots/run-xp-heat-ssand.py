@@ -8,7 +8,7 @@ easypapOptions = {
     "-s ": [512],
     "-th ": [2 ** i for i in range(0, 10)],
     "-tw ": [2 ** i for i in range(0, 10)],
-    "-of ": ["heat-mandel.csv"]
+    "-of ": ["heat-ssand.csv"]
 }
 
 # OMP Internal Control Variable

@@ -486,3 +486,38 @@ unsigned asandPile_compute_tiled(unsigned nb_iter)
 
   return 0;
 }
+
+/////////////////////////////  Tiled sequential version (tiled)
+// Suggested cmdline(s):
+// ./run -k asandPile -v omp -s 512 -m
+//
+// ./run -k asandPile -v omp -wt opt -s 512 -m
+//
+unsigned asandPile_compute_omp(unsigned nb_iter)
+{
+    for (unsigned it = 1; it <= nb_iter; it++)
+    {
+      int change = 0;
+
+      for(int i=0; i<2; i++)
+      {
+#pragma omp parallel for schedule(runtime) shared(change)
+        for (int y = 0; y < DIM; y += TILE_H)
+          for (int x = (y%(TILE_H*2)); x < DIM; x += TILE_W*2) //==TILE_H*i) ? TILE_W : 0
+          {
+            int localChange =
+                do_tile(x + (x == 0), y + (y == 0),
+                        TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                        TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+            if (localChange != 0 && change == 0)
+            {
+#pragma omp critical
+              change |= localChange;
+            }
+          }
+        if (change == 0)
+          return it;
+      }
+    }
+  return 0;
+}

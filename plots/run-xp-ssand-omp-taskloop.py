@@ -7,7 +7,7 @@ easypapOptions = {
     "-v ": ["omp"],
     "-s ": [512],
     "-ts ": [8, 16, 32],
-    "-of ": ["ssand-omp.csv"]
+    "-of ": ["ssand-omp-taskloop.csv"]
 }
 
 # OMP Internal Control Variable
@@ -34,7 +34,7 @@ easypapOptions = {
     "-v ": ["omp_taskloop"],
     "-s ": [512],
     "-ts ": [8, 16, 32],
-    "-of ": ["ssand-taskloop.csv"]
+    "-of ": ["ssand-omp-taskloop.csv"]
 }
 ompICV = {
     "OMP_SCHEDULE=": ["static", "static,1", "dynamic"],

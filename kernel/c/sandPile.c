@@ -225,6 +225,12 @@ int ssandPile_do_tile_opt(int x, int y, int width, int height)
   return diff;
 }
 
+/////////////////////////////  Sequential version (seq)
+// Suggested cmdline(s):
+// ./run -k ssandPile -v seq -s 512 -m
+//
+// ./run -k ssandPile -v seq -wt opt -s 512 -m
+//
 // Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
 unsigned ssandPile_compute_seq(unsigned nb_iter)
 {
@@ -238,6 +244,12 @@ unsigned ssandPile_compute_seq(unsigned nb_iter)
   return 0;
 }
 
+/////////////////////////////  Tiled sequential version (tiled)
+// Suggested cmdline(s):
+// ./run -k ssandPile -v tiled -s 512 -m
+//
+// ./run -k ssandPile -v tiled -wt opt -s 512 -m
+//
 unsigned ssandPile_compute_tiled(unsigned nb_iter)
 {
   for (unsigned it = 1; it <= nb_iter; it++)
@@ -328,6 +340,12 @@ int asandPile_do_tile_opt(int x, int y, int width, int height)
   return change;
 }
 
+/////////////////////////////  Sequential version (seq)
+// Suggested cmdline(s):
+// ./run -k asandPile -v seq -s 512 -m
+//
+// ./run -k asandPile -v seq -wt opt -s 512 -m
+//
 unsigned asandPile_compute_seq(unsigned nb_iter)
 {
   int change = 0;
@@ -342,6 +360,12 @@ unsigned asandPile_compute_seq(unsigned nb_iter)
   return 0;
 }
 
+/////////////////////////////  Tiled sequential version (tiled)
+// Suggested cmdline(s):
+// ./run -k asandPile -v tiled -s 512 -m
+//
+// ./run -k asandPile -v tiled -wt opt -s 512 -m
+//
 unsigned asandPile_compute_tiled(unsigned nb_iter)
 {
   for (unsigned it = 1; it <= nb_iter; it++)

@@ -335,6 +335,42 @@ unsigned ssandPile_compute_omp_tiled(unsigned nb_iter)
   return 0;
 }
 
+/////////////////////////////  Tiled parallale version (omp_tiled)
+// Suggested cmdline(s):
+// ./run -k ssandPile -v omp_taskloop -s 512 -m
+//
+// ./run -k ssandPile -v omp_taskloop -wt opt -s 512 -m
+//
+unsigned ssandPile_compute_omp_taskloop(unsigned nb_iter)
+{
+  for (unsigned it = 1; it <= nb_iter; it++)
+  {
+    int change = 0;
+
+#pragma omp parallel
+#pragma omp single
+    for (int y = 0; y < DIM; y += TILE_H)
+      for (int x = 0; x < DIM; x += TILE_W)
+#pragma omp task shared(change)
+      {
+        int localChange =
+            do_tile(x + (x == 0), y + (y == 0),
+                    TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                    TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+        if (localChange != 0 && change == 0)
+        {
+#pragma omp critical
+          change |= localChange;
+        }
+      }
+    swap_tables();
+    if (change == 0)
+      return it;
+  }
+
+  return 0;
+}
+
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Asynchronous Kernel

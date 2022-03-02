@@ -316,7 +316,8 @@ unsigned ssandPile_compute_omp_tiled(unsigned nb_iter)
 
 #pragma omp parallel for schedule(runtime) collapse(2) shared(change)
     for (int y = 0; y < DIM; y += TILE_H)
-      for (int x = 0; x < DIM; x += TILE_W) {
+      for (int x = 0; x < DIM; x += TILE_W)
+      {
         int localChange =
             do_tile(x + (x == 0), y + (y == 0),
                     TILE_W - ((x + TILE_W == DIM) + (x == 0)),

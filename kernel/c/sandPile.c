@@ -244,6 +244,38 @@ unsigned ssandPile_compute_seq(unsigned nb_iter)
   return 0;
 }
 
+/////////////////////////////  Sequential version (omp)
+// Suggested cmdline(s):
+// ./run -k ssandPile -v omp -s 512 -m
+//
+// ./run -k ssandPile -v omp -wt opt -s 512 -m
+//
+// Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
+unsigned ssandPile_compute_omp(unsigned nb_iter)
+{
+  for (unsigned it = 1; it <= nb_iter; it++)
+  {
+
+    int change = 0;
+#pragma omp parallel for schedule(runtime) shared(change)
+      for (int y = 1; y < DIM-1; y += 1)
+        for (int x = 1; x < DIM-1; x += 1)
+        {
+          int localChange = do_tile(x, y, 1, 1, omp_get_thread_num());
+          if (localChange != 0 && change == 0)
+          {
+  #pragma omp critical
+            change |= localChange;
+          }
+        }
+      swap_tables();
+      if (change == 0)
+        return it;
+  }
+
+  return 0;
+}
+
 /////////////////////////////  Tiled sequential version (tiled)
 // Suggested cmdline(s):
 // ./run -k ssandPile -v tiled -s 512 -m

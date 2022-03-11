@@ -1,0 +1,1 @@
+OMP_NUM_THREADS=1 ./run -k asandPile -s 200 -wt opt -n -ts 200

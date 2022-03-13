@@ -26,14 +26,73 @@
 
 \newpage
 
-\section{4.1}
-% \inputminted[
-%     frame=lines,
-%     framesep=2mm,
-%     baselinestretch=1.2,
-%     fontsize=\footnotesize,
-%     linenos
-% ]{c}{codes/test.c}
+\section{ILP optimization (4.1)}
+
+On as fait les modifications :
+
+Pour \emph{ssandPile\_do\_tile\_opt()} on a retirer les appelles à \em{table(out, i, j)}
+pour passer par une varaible intermedier result. Cette modification petmer au compilateur
+de vectoriser car il peut maintenet facilement voir que les différante lige peuve être 
+calculer en paralelle.
+
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    linenos,
+    firstline=1,
+    lastline=25
+]{diff}{codes/sync_do_tile_opt.c}
+
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    linenos,
+    firstline=27,
+    lastline=45
+]{c}{codes/sync_do_tile_opt.c}
+
+Le gain de performance est de $2.37$ car $\frac{178812}{75408}$
+\\[0.5cm]
+% TODO: correctness
+\\[0.5cm]
+
+Pour \em{asandPile\_do\_tile\_opt()} on a retirer...
+
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    linenos,
+    firstline=1,
+    lastline=24
+]{diff}{codes/async_do_tile_opt.c}
+
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    linenos,
+    firstline=26,
+    lastline=46
+]{c}{codes/async_do_tile_opt.c}
+
+Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
+
+% TODO: correctness
+
+\section{OpenMP implementation of the synchronous version (4.2)}
+
+\section{OpenMP implementation of the asynchronous version (4.3)}
+
+\section{Lazy OpenMP implementations (4.4)}
+
+
 
 % \begin{listing}[!ht]
 %     \inputminted[

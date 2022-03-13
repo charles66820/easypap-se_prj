@@ -499,25 +499,80 @@ unsigned asandPile_compute_omp(unsigned nb_iter)
     {
       int change = 0;
 
-      for(int i=0; i<2; i++)
-      {
-#pragma omp parallel for schedule(runtime) shared(change)
-        for (int y = 0; y < DIM; y += TILE_H)
-          for (int x = ((y - (TILE_H *i))%(TILE_H*2)); x < DIM; x += TILE_W*2) //==TILE_H*i) ? TILE_W : 0
+    //BLEU
+#pragma omp parallel for schedule(runtime) shared(change)  
+    for(int y=0; y<DIM; y+=2*TILE_H)
+    {
+      for (int x = y%(TILE_H*2); x < DIM; x += TILE_W*2)
+        {
+          int localChange =
+              do_tile(x + (x == 0), y + (y == 0),
+                      TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                      TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+          if (change == 0 && localChange != 0)
           {
-            int localChange =
-                do_tile(x + (x == 0), y + (y == 0),
-                        TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                        TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-            if (change == 0 && localChange != 0)
-            {
 #pragma omp critical
-              change |= localChange;
-            }
+            change |= localChange;
           }
+        }
+    }
+
+    //ROUGE
+#pragma omp parallel for schedule(runtime) shared(change)  
+    for(int y=0; y<DIM; y+=2*TILE_H)
+    {
+      for (int x = (y+TILE_H)%(TILE_H*2); x < DIM; x += TILE_W*2)
+        {
+          int localChange =
+              do_tile(x + (x == 0), y + (y == 0),
+                      TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                      TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+          if (change == 0 && localChange != 0)
+          {
+#pragma omp critical
+            change |= localChange;
+          }
+        }
+    }
+    
+    //VERT
+#pragma omp parallel for schedule(runtime) shared(change)  
+    for(int y=TILE_H; y<DIM; y+=2*TILE_H)
+    {
+      for (int x = y%(TILE_H*2); x < DIM; x += TILE_W*2)
+        {
+          int localChange =
+              do_tile(x + (x == 0), y + (y == 0),
+                      TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                      TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+          if (change == 0 && localChange != 0)
+          {
+#pragma omp critical
+            change |= localChange;
+          }
+        }
+    }
+
+    //NOIR
+#pragma omp parallel for schedule(runtime) shared(change)  
+    for(int y=TILE_H; y<DIM; y+=2*TILE_H)
+    {
+      for (int x = (y+TILE_H)%(TILE_H*2); x < DIM; x += TILE_W*2)
+        {
+          int localChange =
+              do_tile(x + (x == 0), y + (y == 0),
+                      TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                      TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+          if (change == 0 && localChange != 0)
+          {
+#pragma omp critical
+            change |= localChange;
+          }
+        }
+    }
+
         if (change == 0)
           return it;
-      }
     }
   return 0;
 }

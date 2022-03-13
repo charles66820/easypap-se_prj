@@ -218,8 +218,7 @@ int ssandPile_do_tile_opt(int x, int y, int width, int height)
       result += table(in, i, j + 1) / 4;
       result += table(in, i, j - 1) / 4;
       table(out, i, j) = result;
-      if (result >= 4)
-        diff = 1;
+      diff |= result >= 4;
     }
 
   return diff;

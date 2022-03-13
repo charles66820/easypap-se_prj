@@ -262,7 +262,7 @@ unsigned ssandPile_compute_omp(unsigned nb_iter)
         for (int x = 1; x < DIM-1; x += 1)
         {
           int localChange = do_tile(x, y, 1, 1, omp_get_thread_num());
-          if (localChange != 0 && change == 0)
+          if (change == 0 && localChange != 0)
           {
   #pragma omp critical
             change |= localChange;
@@ -322,7 +322,7 @@ unsigned ssandPile_compute_omp_tiled(unsigned nb_iter)
             do_tile(x + (x == 0), y + (y == 0),
                     TILE_W - ((x + TILE_W == DIM) + (x == 0)),
                     TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-        if (localChange != 0 && change == 0)
+        if (change == 0 && localChange != 0)
         {
 #pragma omp critical
           change |= localChange;
@@ -358,7 +358,7 @@ unsigned ssandPile_compute_omp_taskloop(unsigned nb_iter)
             do_tile(x + (x == 0), y + (y == 0),
                     TILE_W - ((x + TILE_W == DIM) + (x == 0)),
                     TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-        if (localChange != 0 && change == 0)
+        if (change == 0 && localChange != 0)
         {
 #pragma omp critical
           change |= localChange;
@@ -503,13 +503,13 @@ unsigned asandPile_compute_omp(unsigned nb_iter)
       {
 #pragma omp parallel for schedule(runtime) shared(change)
         for (int y = 0; y < DIM; y += TILE_H)
-          for (int x = (y%(TILE_H*2)); x < DIM; x += TILE_W*2) //==TILE_H*i) ? TILE_W : 0
+          for (int x = ((y - (TILE_H *i))%(TILE_H*2)); x < DIM; x += TILE_W*2) //==TILE_H*i) ? TILE_W : 0
           {
             int localChange =
                 do_tile(x + (x == 0), y + (y == 0),
                         TILE_W - ((x + TILE_W == DIM) + (x == 0)),
                         TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-            if (localChange != 0 && change == 0)
+            if (change == 0 && localChange != 0)
             {
 #pragma omp critical
               change |= localChange;
@@ -520,4 +520,40 @@ unsigned asandPile_compute_omp(unsigned nb_iter)
       }
     }
   return 0;
+}
+
+
+/////////////////////////////  Tiled sequential version (tiled)
+// Suggested cmdline(s):
+// ./run -k asandPile -v omp -s 512 -m
+//
+// ./run -k asandPile -v omp_task -wt opt -s 512 -m
+//
+unsigned asandPile_compute_omp_task(unsigned nb_iter)
+{
+  unsigned res = 0;
+#pragma omp parallel
+#pragma omp master
+  {
+    for (unsigned it = 1; it <= nb_iter; it++) {
+      int change = 0;
+      int tuile[NB_TILES_Y][NB_TILES_X + 1] __attribute__ ((unused));
+
+      for (int y = 0; y < DIM; y += TILE_H)
+        for (int x = 0; x < DIM; x += TILE_W)
+        {
+#pragma omp task depend(in:tuile[x/TILE_W][(y/TILE_H)-1]) depend(in:tuile[(x/TILE_W)-1][y/TILE_H]) depend(out:tuile[x/TILE_W][y/TILE_H])
+          change |= do_tile(x + (x == 0), y + (y == 0),
+                            TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                            TILE_H - ((y + TILE_H == DIM) + (y == 0)),
+                            omp_get_thread_num());
+        }
+#pragma omp taskwait
+      if (!change) {
+        res = it;
+        break;
+      }
+    }
+  }
+  return res;
 }

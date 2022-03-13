@@ -540,10 +540,17 @@ unsigned asandPile_compute_omp_task(unsigned nb_iter)
 
     for (int y = 0; y < DIM; y += TILE_H)
       for (int x = 0; x < DIM; x += TILE_W)
-#pragma omp task depend(in:tuile[x/TILE_W][(y/TILE_H)-1]) depend(in:tuile[(x/TILE_W)-1][y/TILE_H]) depend(out:tuile[x/TILE_W][y/TILE_H]) shared(change)
-          change |= do_tile(x + (x == 0), y + (y == 0),
-                    TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                    TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+#pragma omp task depend(in:tuile[x/TILE_W][(y/TILE_H)+1]) depend(in:tuile[(x/TILE_W)-1][y/TILE_H]) depend(in:tuile[(x/TILE_W)-1][(y/TILE_H)+1]) depend(out:tuile[x/TILE_W][y/TILE_H]) shared(change)
+          {
+            int localChange = do_tile(x + (x == 0), y + (y == 0),
+                      TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                      TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+            if (change == 0 && localChange != 0)
+            {
+#pragma omp critical
+              change |= localChange;
+            }
+          }
 #pragma omp taskwait
       if (!change) {
         res = it;

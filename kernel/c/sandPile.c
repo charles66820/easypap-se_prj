@@ -218,8 +218,7 @@ int ssandPile_do_tile_opt(int x, int y, int width, int height)
       result += table(in, i, j + 1) / 4;
       result += table(in, i, j - 1) / 4;
       table(out, i, j) = result;
-      if (result >= 4)
-        diff = 1;
+      diff |= result >= 4;
     }
 
   return diff;
@@ -594,15 +593,19 @@ unsigned asandPile_compute_omp_task(unsigned nb_iter)
       int change = 0;
       int tuile[NB_TILES_Y][NB_TILES_X + 1] __attribute__ ((unused));
 
-      for (int y = 0; y < DIM; y += TILE_H)
-        for (int x = 0; x < DIM; x += TILE_W)
-        {
-#pragma omp task depend(in:tuile[x/TILE_W][(y/TILE_H)-1]) depend(in:tuile[(x/TILE_W)-1][y/TILE_H]) depend(out:tuile[x/TILE_W][y/TILE_H])
-          change |= do_tile(x + (x == 0), y + (y == 0),
-                            TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                            TILE_H - ((y + TILE_H == DIM) + (y == 0)),
-                            omp_get_thread_num());
-        }
+    for (int y = 0; y < DIM; y += TILE_H)
+      for (int x = 0; x < DIM; x += TILE_W)
+#pragma omp task depend(in:tuile[x/TILE_W][(y/TILE_H)+1]) depend(in:tuile[(x/TILE_W)-1][y/TILE_H]) depend(in:tuile[(x/TILE_W)-1][(y/TILE_H)+1]) depend(out:tuile[x/TILE_W][y/TILE_H]) shared(change)
+          {
+            int localChange = do_tile(x + (x == 0), y + (y == 0),
+                      TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                      TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+            if (change == 0 && localChange != 0)
+            {
+#pragma omp critical
+              change |= localChange;
+            }
+          }
 #pragma omp taskwait
       if (!change) {
         res = it;

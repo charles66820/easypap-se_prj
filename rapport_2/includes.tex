@@ -1,0 +1,44 @@
+% Text packages
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts} % latexsym
+\usepackage{lmodern}
+
+% Fonts packages
+\usepackage{ifxetex}
+\ifxetex
+    \usepackage{fontspec}
+    \setmainfont{OpenDyslexic}
+\else
+    \usepackage[T1]{fontenc}
+\fi
+
+% Math and title import
+\usepackage{amsmath}
+\usepackage{authoraftertitle}
+
+% Clickable link
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    citecolor=blue,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=blue
+}
+
+% Image side by side
+\usepackage{subcaption}
+
+% Text color
+\usepackage{xcolor}
+
+\usepackage{xspace}
+
+% Image
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+\usepackage{bookmark}
+
+% Code import
+% \usepackage{minted}

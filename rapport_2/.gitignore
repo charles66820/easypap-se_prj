@@ -10,3 +10,4 @@
 *.fdb_latexmk
 *.dvi
 *.eps
+_minted-*

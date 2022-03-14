@@ -421,6 +421,65 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
   return 0;
 }
 
+/////////////////////////////  Tiled sequential version (tiled lazy)
+// Suggested cmdline(s):
+// ./run -k ssandPile -v omp_lazy -s 512 -m
+//
+// ./run -k ssandPile -v omp_lazy -wt opt -s 512 -m
+//
+unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
+{
+  int res = 0;
+
+  int tuile1[NB_TILES_Y][NB_TILES_X] __attribute__ ((unused));
+  int tuile2[NB_TILES_Y][NB_TILES_X] __attribute__ ((unused));
+
+  for (unsigned it = 1; it <= nb_iter; it++)
+  {
+    int change = 0;
+
+#pragma omp parallel for schedule(runtime) collapse(2) shared(change)
+    for (int y = 0; y < DIM; y += TILE_H)
+      for (int x = 0; x < DIM; x += TILE_W)
+      {
+        int localChange = 0;
+        int ty = y / TILE_H;
+        int tx = y / TILE_W;
+
+        if (it == 1 || ((it & 1) == 0 &&
+             (tuile2[ty - 1][tx] == 1 || tuile2[ty + 1][tx] == 1 ||
+              tuile2[ty][tx - 1] == 1 || tuile2[ty][tx + 1] == 1)) ||
+            ((it & 1) == 1 &&
+             (tuile1[ty - 1][tx] == 1 || tuile1[ty + 1][tx] == 1 ||
+              tuile1[ty][tx - 1] == 1 || tuile1[ty][tx + 1] == 1)))
+        {
+          localChange =
+              do_tile(x + (x == 0), y + (y == 0),
+                      TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                      TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+        }
+
+        if ((it & 1) == 0)
+          tuile1[ty][tx] = localChange;
+        else
+          tuile2[ty][tx] = localChange;
+
+        if (change == 0 && localChange != 0)
+        {
+#pragma omp critical
+          change |= localChange;
+        }
+      }
+    swap_tables();
+    if (change == 0) {
+      res = it;
+      break;
+    }
+  }
+
+  return res;
+}
+
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Asynchronous Kernel

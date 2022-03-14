@@ -730,7 +730,7 @@ void mallocFailure2D(int** tab2D, char* str)
 {
   if(tab2D==NULL)
   {
-    fprintf(stderr, str);
+    fprintf(stderr, "%s", str);
     exit(EXIT_FAILURE);
   }
 }
@@ -739,7 +739,7 @@ void mallocFailure(int* tab1D, char* str)
 {
   if(tab1D==NULL)
   {
-    fprintf(stderr, str);
+    fprintf(stderr, "%s", str);
     exit(EXIT_FAILURE);
   }
 }

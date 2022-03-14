@@ -478,7 +478,7 @@ unsigned asandPile_compute_tiled(unsigned nb_iter)
         change |=
             do_tile(x + (x == 0), y + (y == 0),
                     TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                    TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
+                    TILE_H - ((y + TILE_H == DIM) + (y == 0)),  0/* CPU id */);
     if (change == 0)
       return it;
   }
@@ -614,4 +614,103 @@ unsigned asandPile_compute_omp_task(unsigned nb_iter)
     }
   }
   return res;
+}
+
+
+void mallocFailure2D(int** tab2D, char* str)
+{
+  if(tab2D==NULL)
+  {
+    fprintf(stderr, str);
+    exit(EXIT_FAILURE);
+  }
+}
+
+void mallocFailure(int* tab1D, char* str)
+{
+  if(tab1D==NULL)
+  {
+    fprintf(stderr, str);
+    exit(EXIT_FAILURE);
+  }
+}
+
+int** callocTab2D(unsigned int length, unsigned int height)
+{
+  int** tab = (int**)malloc(sizeof(int*)*length);
+  mallocFailure2D(tab, "Malloc failure in callocTab2D!\n");
+
+  for(unsigned int i=0; i<length; i++)
+  {
+    tab[i] = (int*)calloc(height, sizeof(int));
+    mallocFailure(tab[i], "Calloc failure in callocTab2D!\n");
+  }
+
+  return tab;
+}
+
+void freeTab2D(int** tab, int length)
+{
+  for(unsigned int i=0; i<length; i++)
+  {
+    free(tab[i]);
+  }
+  free(tab);
+}
+
+/////////////////////////////  Lazy version (tiled)
+// Suggested cmdline(s):
+// ./run -k asandPile -v lazy -s 512 -m
+//
+// ./run -k asandPile -v lazy -wt opt -s 512 -m
+//
+unsigned asandPile_compute_lazy(unsigned nb_iter)
+{
+  int** tab1 = callocTab2D(NB_TILES_X, NB_TILES_Y);
+  int** tab2 = callocTab2D(NB_TILES_X, NB_TILES_Y);
+
+
+  for (unsigned it = 1; it <= nb_iter; it++)
+  {
+    int change = 0;
+
+    for(int i=0; i<2; i++)
+      for (int y = 0; y < DIM; y += TILE_H)
+        for (int x = 0; x < DIM; x += TILE_W)
+        {
+          int pos_x = x/TILE_W;
+          int pos_y = y/TILE_H;
+          //printf("X:%d\tY:%d\n", pos_x, pos_y);
+          if(i%2==0)
+          {
+            if(!tab1[pos_x][pos_y])
+            {
+              change |=
+                  do_tile(x + (x == 0), y + (y == 0),
+                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
+              tab2[pos_x][pos_y] = change;
+            }
+          }
+          else
+          {
+            if(!tab2[pos_x][pos_y])
+            {
+              change |=
+                  do_tile(x + (x == 0), y + (y == 0),
+                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
+              tab1[pos_x][pos_y] = change;
+            }
+          }
+        }
+
+    if (change == 0)
+      return it;
+  }
+
+  freeTab2D(tab1, NB_TILES_X);
+  freeTab2D(tab2, NB_TILES_X);
+
+  return 0;
 }

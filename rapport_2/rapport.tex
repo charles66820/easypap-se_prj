@@ -33,8 +33,9 @@ On as fait les modifications :
 Pour \emph{ssandPile\_do\_tile\_opt()} on a retirer les appelles à \em{table(out, i, j)}
 pour passer par une varaible intermedier result. Cette modification petmer au compilateur
 de vectoriser car il peut maintenet facilement voir que les différante lige peuve être 
-calculer en paralelle.
+calculer en paralelle.\\
 
+Nouas avons modifier c'est lignes :
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -45,6 +46,7 @@ calculer en paralelle.
     lastline=25
 ]{diff}{codes/sync_do_tile_opt.c}
 
+Le code de la fonction final :
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -55,13 +57,29 @@ calculer en paralelle.
     lastline=45
 ]{c}{codes/sync_do_tile_opt.c}
 
+Nous avons verifier et on obtient le même résultats et le même nombre d'iterations (69190)
+avec la version par défaut et la version opt.\\
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{.4\textwidth}
+        \includegraphics[width=1\linewidth]{dump-ssandPile-seq-dim-512-iter-69190_default}
+        \caption{\small{avec do\_tile\_default}}
+        \label{fig:ssandPile_default}
+    \end{subfigure}
+    \begin{subfigure}{.4\textwidth}
+        \includegraphics[width=1\linewidth]{dump-ssandPile-seq-dim-512-iter-69190_opt}
+        \caption{\small{avec do\_tile\_opt}}
+        \label{fig:ssandPile_opt}
+    \end{subfigure}
+    \caption{Verification du résultats pour ssandPile}
+\end{figure}
+
 Le gain de performance est de $2.37$ car $\frac{178812}{75408}$
-\\[0.5cm]
-% TODO: correctness
 \\[0.5cm]
 
 Pour \em{asandPile\_do\_tile\_opt()} on a retirer...
 
+Nouas avons modifier c'est lignes :
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -72,6 +90,7 @@ Pour \em{asandPile\_do\_tile\_opt()} on a retirer...
     lastline=24
 ]{diff}{codes/async_do_tile_opt.c}
 
+Le code de la fonction final :
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -82,9 +101,24 @@ Pour \em{asandPile\_do\_tile\_opt()} on a retirer...
     lastline=46
 ]{c}{codes/async_do_tile_opt.c}
 
-Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
+Nous avons verifier et on obtient le même résultats et le même nombre d'iterations (34938)
+avec la version par défaut et la version opt.\\
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{.4\textwidth}
+        \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_default}
+        \caption{\small{avec do\_tile\_default}}
+        \label{fig:asandPile_default}
+    \end{subfigure}
+    \begin{subfigure}{.4\textwidth}
+        \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_opt}
+        \caption{\small{avec do\_tile\_opt}}
+        \label{fig:asandPile_opt}
+    \end{subfigure}
+    \caption{Verification du résultats pour asandPile}
+\end{figure}
 
-% TODO: correctness
+Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
 
 \section{OpenMP implementation of the synchronous version (4.2)}
 

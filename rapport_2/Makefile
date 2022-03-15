@@ -6,7 +6,7 @@ TEX_ARG = -interaction=nonstopmode -file-line-error -shell-escape
 all: $(MAIN_TEX).pdf
 
 clean:
-	rm -f *.dvi *.eps *.log *.aux *.toc *.bbl *.blg
+	rm -f *.dvi *.eps *.log *.aux *.toc *.bbl *.blg _minted-rapport/*
 	rm -f $(MAIN_TEX).pdf
 
 .SUFFIXES: .pdf .tex

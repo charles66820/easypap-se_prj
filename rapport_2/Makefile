@@ -1,7 +1,7 @@
 MAIN_TEX = rapport
 
 TEX = pdflatex
-TEX_ARG = -interaction=nonstopmode -file-line-error
+TEX_ARG = -interaction=nonstopmode -file-line-error -shell-escape
 
 all: $(MAIN_TEX).pdf
 

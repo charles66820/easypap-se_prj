@@ -112,12 +112,12 @@ avec la version par défaut et la version opt.\\
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_default}
         \caption{\small{avec do\_tile\_default}}
-        \label{fig:asandPile_default}
+        % \label{fig:asandPile_default}
     \end{subfigure}
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_opt}
         \caption{\small{avec do\_tile\_opt}}
-        \label{fig:asandPile_opt}
+        % \label{fig:asandPile_opt}
     \end{subfigure}
     \caption{Verification du résultats pour asandPile}
 \end{figure}
@@ -126,15 +126,16 @@ Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
 
 \section{OpenMP implementation of the synchronous version (4.2)}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=1\linewidth]{ssand_omp.pdf}
-\end{figure}
+% TODO: ssandPile_compute_omp
+
+% TODO: ssandPile_compute_omp_tiled
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{ssand_omp_tiled.pdf}
+    \includegraphics[width=1\linewidth]{ssand_omp_tiled}
 \end{figure}
+
+% TODO: ssandPile_compute_omp_taskloop
 
 \section{OpenMP implementation of the asynchronous version (4.3)}
 
@@ -161,12 +162,12 @@ Le code de la fonction final :
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_default}
         \caption{\small{version seq}}
-        \label{fig:asandPile_default}
+        % \label{fig:asandPile_default}
     \end{subfigure}
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-asandPile-omp_tiled-dim-512-iter-34954}
         \caption{\small{version omp\_tiled}}
-        \label{fig:asandPile_opt}
+        % \label{fig:asandPile_opt}
     \end{subfigure}
     \caption{Verification du résultats pour asandPile}
 \end{figure}
@@ -177,11 +178,27 @@ Le gain de performance par rapport au séquentiel avec tuiles optimisées est de
     \centering
     \includegraphics[width=1\linewidth]{Heatmap-asand_omp}
     \caption{\small{heatmap comparaison omp\_tiled \& tiled}}
-    \label{fig:heatmaplazy}
+    % \label{fig:heatmaplazy}
 \end{figure}
 
 Les expériences montrent que pour certaines tailles de tuiles, il n'y a pas de résultat d'accélération, et après vérification, le programme ne fonctionne pas sur ces tailles là.
 Néanmoins, avec ces résultats, ont en déduit que le schedule static,1 avec une width de 32 et une height de 4 est la meilleure option.
+
+% TODO: Then you can compare the performance of all variants on the size 512 case.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{ssand-xp-all_8_16.pdf}
+    \includegraphics[width=1\linewidth]{ssand-xp-all_32_64.pdf}
+    \caption{\small{ssandPile comparaison de toutes les variants}}
+    % \label{fig:ssand-xp-all}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{asand-xp-all_8_16.pdf}
+    \includegraphics[width=1\linewidth]{asand-xp-all_32_64.pdf}
+    \caption{\small{asandPile comparaison de toutes les variants}}
+    % \label{fig:asand-xp-all}
+\end{figure}
 
 \section{Lazy OpenMP implementations (4.4)}
 
@@ -193,12 +210,12 @@ servant successivement de lecture et d'écriture pour tester si les tuiles autou
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_default}
         \caption{\small{avec do\_tile\_default}}
-        \label{fig:asandPile_default}
+        % \label{fig:asandPile_default}
     \end{subfigure}
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-asandPile-omp_lazy-dim-512-iter-34954}
         \caption{\small{version omp\_lazy}}
-        \label{fig:asandPile_opt}
+        % \label{fig:asandPile_opt}
     \end{subfigure}
     \caption{Verification du résultats pour asandPile}
 \end{figure}
@@ -209,7 +226,7 @@ Le gain de performance par rapport au asynchrone lazy avec tuiles optimisées es
     \centering
     \includegraphics[width=1\linewidth]{Heatmap-asand_omp_lazy}
     \caption{\small{heatmap comparaison omp\_lazy \& lazy}}
-    \label{fig:heatmaplazy}
+    % \label{fig:heatmaplazy}
 \end{figure}
 
 Les expériences montrent que pour certaines tailles de tuiles, il n'y a pas de résultat d'accélération, et après vérification, le programme ne fonctionne pas sur ces tailles là.

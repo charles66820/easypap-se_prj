@@ -601,7 +601,7 @@ unsigned asandPile_compute_tiled(unsigned nb_iter)
 //
 // ./run -k asandPile -v omp -wt opt -s 512 -m
 //
-unsigned asandPile_compute_omp(unsigned nb_iter)
+unsigned asandPile_compute_omp_tiled(unsigned nb_iter)
 {
     for (unsigned it = 1; it <= nb_iter; it++)
     {

@@ -147,14 +147,17 @@ Le code de la fonction final :
     framesep=2mm,
     baselinestretch=1.2,
     fontsize=\footnotesize,
-    linenos
+    linenos,
+    firstline=1,
+    lastline=23
 ]{c}{codes/async_omp_tiled.c}
+\emph{Le nid BLEU est répété 4 fois avec des initialisations de x et y qui diffèrent}
 
 \begin{figure}[H]
     \centering
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_default}
-        \caption{\small{avec do\_tile\_default}}
+        \caption{\small{version seq}}
         \label{fig:asandPile_default}
     \end{subfigure}
     \begin{subfigure}{.4\textwidth}
@@ -166,6 +169,16 @@ Le code de la fonction final :
 \end{figure}
 
 Le gain de performance par rapport au séquentiel avec tuiles optimisées est de $1.98$ car $\frac{30927.379}{15641.740}$
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Heatmap-asand_omp}
+    \caption{\small{heatmap comparaison omp\_tiled \& tiled}}
+    \label{fig:heatmaplazy}
+\end{figure}
+
+Les expériences montrent que pour certaines tailles de tuiles, il n'y a pas de résultat d'accélération, et après vérification, le programme ne fonctionne pas sur ces tailles là.
+Néanmoins, avec ces résultats, ont en déduit que le schedule static,1 avec une width de 32 et une height de 4 est la meilleure option.
 
 \section{Lazy OpenMP implementations (4.4)}
 
@@ -187,7 +200,17 @@ servant successivement de lecture et d'écriture pour tester si les tuiles autou
     \caption{Verification du résultats pour asandPile}
 \end{figure}
 
-Le gain de performance par rapport au séquentiel avec tuiles optimisées est de $1.35$ car $\frac{30927.379}{22754.307}$
+Le gain de performance par rapport au asynchrone lazy avec tuiles optimisées est de $1.35$ car $\frac{32292.716}{23825.744}$
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Heatmap-asand_omp_lazy}
+    \caption{\small{heatmap comparaison omp\_lazy \& lazy}}
+    \label{fig:heatmaplazy}
+\end{figure}
+
+Les expériences montrent que pour certaines tailles de tuiles, il n'y a pas de résultat d'accélération, et après vérification, le programme ne fonctionne pas sur ces tailles là.
+Néanmoins, avec ces résultats, ont en déduit que le schedule static,1 avec une width de 32 et une height de 4 est la meilleure option.
 
 % \begin{listing}[!ht]
 %     \inputminted[

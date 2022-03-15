@@ -135,13 +135,30 @@ Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
 
 \section{OpenMP implementation of the asynchronous version (4.3)}
 
-Pour paralleliser avec \emph{asandPile_compute_omp_tiled}, il a fallu créer 4 nids de boucles afin d'éviter les lectures/écritures concurentes.
+Pour paralleliser avec \emph{asandPile\_compute\_omp\_tiled}, il a fallu créer 4 nids de boucles afin d'éviter les lectures/écritures concurentes.
 On a donc un nid de boucle pour les lignes et colonnes impaires, un pour les lignes impaires et colonnes paires, un pour les lignes paires et colonnes impaires, et un pour les lignes et colonnes paires.
 
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{.4\textwidth}
+        \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_default}
+        \caption{\small{avec do\_tile\_default}}
+        \label{fig:asandPile_default}
+    \end{subfigure}
+    \begin{subfigure}{.4\textwidth}
+        \includegraphics[width=1\linewidth]{dump-asandPile-omp_tiled-dim-512-iter-34954}
+        \caption{\small{version omp\_tiled}}
+        \label{fig:asandPile_opt}
+    \end{subfigure}
+    \caption{Verification du résultats pour asandPile}
+\end{figure}
+
+Le gain de performance est de $1.98$ car $\frac{30927.379}{15641.740}$
 
 \section{Lazy OpenMP implementations (4.4)}
 
-
+assandPile_Lazy : 22754.307
+Gain : 1.35
 
 % \begin{listing}[!ht]
 %     \inputminted[

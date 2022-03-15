@@ -2,12 +2,12 @@
 from expTools import *
 
 easypapOptions = {
-    "-k ": ["asandPile"],
+    "-k ": ["ssandPile"],
     "-i ": [100],
-    "-v ": ["seq", "tiled", "omp_tiled", "omp_task", "lazy", "omp_lazy"],
+    "-v ": ["seq", "omp", "tiled", "omp_tiled", "omp_taskloop", "lazy", "omp_lazy"],
     "-s ": [512],
     "-ts ": [32, 64],
-    "-of ": ["asand-xp-all.csv"]
+    "-of ": ["ssand-xp-all.csv"]
 }
 
 # OMP Internal Control Variable

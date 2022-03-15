@@ -147,7 +147,18 @@ un \em{pragam omp for} avec un \em{collapse(2)} pour que les tuiles soit calcule
     \includegraphics[width=1\linewidth]{ssand_omp_tiled}
 \end{figure}
 
-% TODO: ssandPile_compute_omp_taskloop
+Pour \emph{ssandPile\_compute\_omp\_taskloop()} on a dupliquer la version tile pour y ajouter
+un \em{pragam omp single}, pour que un thread definisse les taches, et un \em{pragam omp task}
+devant l'appelle de la fonction \em{do\_tile()} pour que le calcule des tuiles ce trouve dans un thread.\\
+
+% TODO: comparaision avec taskloop
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{ssand-xp-all_8_16.pdf}
+    \includegraphics[width=1\linewidth]{ssand-xp-all_32_64.pdf}
+    \caption{\small{ssandPile comparaison de toutes les variants}}
+    % \label{fig:ssand-xp-all}
+\end{figure}
 
 \section{OpenMP implementation of the asynchronous version (4.3)}
 
@@ -197,13 +208,6 @@ Les expériences montrent que pour certaines tailles de tuiles, il n'y a pas de 
 Néanmoins, avec ces résultats, ont en déduit que le schedule static,1 avec une width de 32 et une height de 4 est la meilleure option.
 
 % TODO: Then you can compare the performance of all variants on the size 512 case.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\linewidth]{ssand-xp-all_8_16.pdf}
-    \includegraphics[width=1\linewidth]{ssand-xp-all_32_64.pdf}
-    \caption{\small{ssandPile comparaison de toutes les variants}}
-    % \label{fig:ssand-xp-all}
-\end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{asand-xp-all_8_16.pdf}

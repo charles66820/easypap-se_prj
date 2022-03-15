@@ -141,7 +141,9 @@ Le code de la fonction :
 Pour \emph{ssandPile\_compute\_omp\_tiled()} on a dupliquer la version tile pour y ajouter
 un \em{pragam omp for} avec un \em{collapse(2)} pour que les tuiles soit calculer pars des threads.\\
 
-% TODO: description taille de tuiles
+La heatmap montre que en moyenne, le schedule static est meilleur que le dynamique,
+cependant on cherche à resoudre un problème précis, donc on va chercher l'accélération maximale.
+Ici ce sera avec des tuiles de width 512 et de height 4 en schedule dynamique.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{ssand_omp_tiled}
@@ -163,9 +165,9 @@ devant l'appelle de la fonction \em{do\_tile()} pour que le calcule des tuiles c
 \section{OpenMP implementation of the asynchronous version (4.3)}
 
 Pour paralleliser avec \emph{asandPile\_compute\_omp\_tiled}, il a fallu créer 4 nids de boucles afin d'éviter les lectures/écritures concurentes.
-On a donc un nid de boucle pour les lignes et colonnes impaires, 
-un pour les lignes impaires et colonnes paires, 
-un pour les lignes paires et colonnes impaires, 
+On a donc un nid de boucle pour les lignes et colonnes impaires,
+un pour les lignes impaires et colonnes paires,
+un pour les lignes paires et colonnes impaires,
 et un pour les lignes et colonnes paires.
 
 Le code de la fonction final :

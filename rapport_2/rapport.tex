@@ -35,7 +35,7 @@ On a fait les modifications :
 
 Pour \emph{ssandPile\_do\_tile\_opt()} on a retiré les appels à \em{table(out, i, j)}
 pour passer par une varaible intermediaire result. Cette modification permet au compilateur
-de vectoriser car il peut maintenant facilement voir que les différentes lignes peuvent être 
+de vectoriser car il peut maintenant facilement voir que les différentes lignes peuvent être
 calculés en parallels.\\
 
 Nous avons modifié ces lignes :
@@ -126,10 +126,22 @@ Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
 
 \section{OpenMP implementation of the synchronous version (4.2)}
 
-% TODO: ssandPile_compute_omp
+Pour \emph{ssandPile\_compute\_omp()} on a fait en sorte de partourir chaque grain de sable
+puis on ajouter un \em{pragam omp for} pour que chaque grain de sable sois calculer par un thread.\\
 
-% TODO: ssandPile_compute_omp_tiled
+Le code de la fonction :
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    linenos
+]{c}{codes/sync_omp.c}
 
+Pour \emph{ssandPile\_compute\_omp\_tiled()} on a dupliquer la version tile pour y ajouter
+un \em{pragam omp for} avec un \em{collapse(2)} pour que les tuiles soit calculer pars des threads.\\
+
+% TODO: description taille de tuiles
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{ssand_omp_tiled}
@@ -231,19 +243,5 @@ Le gain de performance par rapport au asynchrone lazy avec tuiles optimisées es
 
 Les expériences montrent que pour certaines tailles de tuiles, il n'y a pas de résultat d'accélération, et après vérification, le programme ne fonctionne pas sur ces tailles là.
 Néanmoins, avec ces résultats, ont en déduit que le schedule static,1 avec une width de 32 et une height de 4 est la meilleure option.
-
-% \begin{listing}[!ht]
-%     \inputminted[
-%         frame=lines,
-%         framesep=2mm,
-%         baselinestretch=1.2,
-%         fontsize=\footnotesize,
-%         linenos
-%     ]{c}{codes/test.c}
-%     \caption{Example from external file}
-%     \label{listing:1}
-% \end{listing}
-
-% \includegraphics[height=1.5cm]{<image>}
 
 \end{document}

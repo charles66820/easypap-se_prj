@@ -136,7 +136,19 @@ Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
 \section{OpenMP implementation of the asynchronous version (4.3)}
 
 Pour paralleliser avec \emph{asandPile\_compute\_omp\_tiled}, il a fallu créer 4 nids de boucles afin d'éviter les lectures/écritures concurentes.
-On a donc un nid de boucle pour les lignes et colonnes impaires, un pour les lignes impaires et colonnes paires, un pour les lignes paires et colonnes impaires, et un pour les lignes et colonnes paires.
+On a donc un nid de boucle pour les lignes et colonnes impaires, 
+un pour les lignes impaires et colonnes paires, 
+un pour les lignes paires et colonnes impaires, 
+et un pour les lignes et colonnes paires.
+
+Le code de la fonction final :
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    linenos
+]{c}{codes/async_omp_tiled.c}
 
 \begin{figure}[H]
     \centering
@@ -153,12 +165,29 @@ On a donc un nid de boucle pour les lignes et colonnes impaires, un pour les lig
     \caption{Verification du résultats pour asandPile}
 \end{figure}
 
-Le gain de performance est de $1.98$ car $\frac{30927.379}{15641.740}$
+Le gain de performance par rapport au séquentiel avec tuiles optimisées est de $1.98$ car $\frac{30927.379}{15641.740}$
 
 \section{Lazy OpenMP implementations (4.4)}
 
-assandPile_Lazy : 22754.307
-Gain : 1.35
+Pour la version asynchrone, nous avons repris la version précédente et ajouté deux tableaux
+servant successivement de lecture et d'écriture pour tester si les tuiles autour ont été modifiés à l'itération précédente.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{.4\textwidth}
+        \includegraphics[width=1\linewidth]{dump-asandPile-seq-dim-512-iter-34938_default}
+        \caption{\small{avec do\_tile\_default}}
+        \label{fig:asandPile_default}
+    \end{subfigure}
+    \begin{subfigure}{.4\textwidth}
+        \includegraphics[width=1\linewidth]{dump-asandPile-omp_lazy-dim-512-iter-34954}
+        \caption{\small{version omp\_lazy}}
+        \label{fig:asandPile_opt}
+    \end{subfigure}
+    \caption{Verification du résultats pour asandPile}
+\end{figure}
+
+Le gain de performance par rapport au séquentiel avec tuiles optimisées est de $1.35$ car $\frac{30927.379}{22754.307}$
 
 % \begin{listing}[!ht]
 %     \inputminted[

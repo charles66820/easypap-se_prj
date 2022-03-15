@@ -147,6 +147,10 @@ un \em{pragam omp for} avec un \em{collapse(2)} pour que les tuiles soit calcule
     \includegraphics[width=1\linewidth]{ssand_omp_tiled}
 \end{figure}
 
+La heatmap montre que en moyenne, le schedule static est meilleur que le dynamique, 
+cependant on cherche à resoudre un problème précis, donc on va chercher l'accélération maximale.
+Ici ce sera avec des tuiles de width 512 et de height 4 en schedule dynamique.
+
 % TODO: ssandPile_compute_omp_taskloop
 
 \section{OpenMP implementation of the asynchronous version (4.3)}

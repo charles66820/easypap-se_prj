@@ -597,11 +597,11 @@ unsigned asandPile_compute_tiled(unsigned nb_iter)
 
 /////////////////////////////  Tiled sequential version (tiled)
 // Suggested cmdline(s):
-// ./run -k asandPile -v omp -s 512 -m
+// ./run -k asandPile -v omp_tiled -s 512 -m
 //
-// ./run -k asandPile -v omp -wt opt -s 512 -m
+// ./run -k asandPile -v omp_tiled -wt opt -s 512 -m
 //
-unsigned asandPile_compute_omp(unsigned nb_iter)
+unsigned asandPile_compute_omp_tiled(unsigned nb_iter)
 {
     for (unsigned it = 1; it <= nb_iter; it++)
     {

@@ -28,14 +28,14 @@
 
 \section{ILP optimization (4.1)}
 
-On as fait les modifications :
+On a fait les modifications :
 
-Pour \emph{ssandPile\_do\_tile\_opt()} on a retirer les appelles à \em{table(out, i, j)}
-pour passer par une varaible intermedier result. Cette modification petmer au compilateur
-de vectoriser car il peut maintenet facilement voir que les différante lige peuve être 
-calculer en paralelle.\\
+Pour \emph{ssandPile\_do\_tile\_opt()} on a retiré les appels à \em{table(out, i, j)}
+pour passer par une varaible intermediaire result. Cette modification permet au compilateur
+de vectoriser car il peut maintenant facilement voir que les différentes lignes peuvent être 
+calculés en parallels.\\
 
-Nouas avons modifier c'est lignes :
+Nous avons modifié ces lignes :
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -57,7 +57,7 @@ Le code de la fonction final :
     lastline=45
 ]{c}{codes/sync_do_tile_opt.c}
 
-Nous avons verifier et on obtient le même résultats et le même nombre d'iterations (69190)
+Nous avons verifié et on obtient le même résultats et le même nombre d'iterations (69190)
 avec la version par défaut et la version opt.\\
 \begin{figure}[H]
     \centering
@@ -77,9 +77,10 @@ avec la version par défaut et la version opt.\\
 Le gain de performance est de $2.37$ car $\frac{178812}{75408}$
 \\[0.5cm]
 
-Pour \em{asandPile\_do\_tile\_opt()} on a retirer...
+Pour \emph{asandPile\_do\_tile\_opt()} on a retiré les appels à \em{atable(i, j)} pour passer par une variable intermédiaire result. Cette modification permet au compilateur
+de vectoriser car il peut maintenant facilement voir que les différentes lignes peuvent être calculés en parallele.
 
-Nouas avons modifier c'est lignes :
+Nous avons modifié ces lignes :
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -101,7 +102,7 @@ Le code de la fonction final :
     lastline=46
 ]{c}{codes/async_do_tile_opt.c}
 
-Nous avons verifier et on obtient le même résultats et le même nombre d'iterations (34938)
+Nous avons verifié et on obtient le même résultat et le même nombre d'iterations (34938)
 avec la version par défaut et la version opt.\\
 \begin{figure}[H]
     \centering
@@ -133,6 +134,10 @@ Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
 \end{figure}
 
 \section{OpenMP implementation of the asynchronous version (4.3)}
+
+Pour paralleliser avec \emph{asandPile_compute_omp_tiled}, il a fallu créer 4 nids de boucles afin d'éviter les lectures/écritures concurentes.
+On a donc un nid de boucle pour les lignes et colonnes impaires, un pour les lignes impaires et colonnes paires, un pour les lignes paires et colonnes impaires, et un pour les lignes et colonnes paires.
+
 
 \section{Lazy OpenMP implementations (4.4)}
 

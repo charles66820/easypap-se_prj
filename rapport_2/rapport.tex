@@ -218,6 +218,10 @@ Néanmoins, avec ces résultats, ont en déduit que le schedule static,1 avec un
     % \label{fig:asand-xp-all}
 \end{figure}
 
+D'après ces schémas, l'accélération maximale est toujours donnée pour 10 threads peu importe la taille de tuile donnée (8*8, 16*16, 32*32, 64*64). 
+On voit également une chute de performances vers 25 threads, c'est parcequ'on était sur \emph{kira} qui est une machine 24 coeurs.
+
+
 \section{Lazy OpenMP implementations (4.4)}
 
 Pour la version asynchrone, nous avons repris la version précédente et ajouté deux tableaux

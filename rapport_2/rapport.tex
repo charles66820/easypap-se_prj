@@ -67,12 +67,12 @@ avec la version par défaut et la version opt.\\
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-ssandPile-seq-dim-512-iter-69190_default}
         \caption{\small{avec do\_tile\_default}}
-        \label{fig:ssandPile_default}
+        % \label{fig:ssandPile_default}
     \end{subfigure}
     \begin{subfigure}{.4\textwidth}
         \includegraphics[width=1\linewidth]{dump-ssandPile-seq-dim-512-iter-69190_opt}
         \caption{\small{avec do\_tile\_opt}}
-        \label{fig:ssandPile_opt}
+        % \label{fig:ssandPile_opt}
     \end{subfigure}
     \caption{Verification du résultats pour ssandPile}
 \end{figure}
@@ -82,7 +82,7 @@ Le gain de performance est de $2.37$ car $\frac{178812}{75408}$
 
 Pour \emph{asandPile\_do\_tile\_opt()} on a retiré les appels à \em{atable(i, j)} pour passer par une
 variable intermédiaire result. Cette modification permet au compilateur de vectoriser car il peut
-maintenant facilement voir que les différentes lignes peuvent être calculés en parallele.
+maintenant facilement voir que les différentes lignes peuvent être calculés en parallèle.
 
 Nous avons modifié ces lignes :
 \inputminted[
@@ -143,7 +143,7 @@ Pour \emph{ssandPile\_compute\_omp\_tiled()} on a dupliqué la version tile pour
 un \em{pragam omp for} avec un \em{collapse(2)} pour que les tuiles soient calculés par des threads.\\
 
 La heatmap montre que en moyenne, le schedule static est meilleur que le dynamique,
-cependant on cherche à resoudre un problème précis, donc on va chercher l'accélération maximale.
+cependant on cherche à résoudre un problème précis, donc on va chercher l'accélération maximale.
 Ici ce sera avec des tuiles de width 512 et de height 4 en schedule dynamique.
 \begin{figure}[H]
     \centering
@@ -154,8 +154,8 @@ Pour \emph{ssandPile\_compute\_omp\_taskloop()} on a dupliqué la version tile p
 un \em{pragam omp single}, pour qu'un thread definisse les taches, et un \em{pragam omp task}
 devant l'appelle de la fonction \em{do\_tile()} pour que le calcule des tuiles se trouve dans un thread.\\
 
-On voit que taskloop avec des tuile de taille 64 et 32 est presque aussi bonne que omp\_tile avec
-des tuiles de taille 64, 32 et 16. Et que taskloop n'est pas très efficace avec des tuiles de taille 8 ou 16.
+On voit que \em{taskloop} avec des tuile de taille 64 et 32 est presque aussi bonne que \em{omp\_tile} avec
+des tuiles de taille 64, 32 et 16. Et que \em{taskloop} n'est pas très efficace avec des tuiles de taille 8 ou 16.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{ssand-xp-all_taskloop.pdf}
@@ -165,8 +165,8 @@ des tuiles de taille 64, 32 et 16. Et que taskloop n'est pas très efficace avec
 
 \section{OpenMP implementation of the asynchronous version (4.3)}
 
-Pour paralleliser avec \emph{asandPile\_compute\_omp\_tiled}, il a fallu créer 4 nids de boucles afin d'éviter
-les lectures/écritures concurentes.
+Pour paralléliser avec \emph{asandPile\_compute\_omp\_tiled}, il a fallu créer 4 nids de boucles afin d'éviter
+les lectures/écritures concurrentes.
 On a donc un nid de boucle pour les lignes et colonnes impaires,
 un pour les lignes impaires et colonnes paires,
 un pour les lignes paires et colonnes impaires,

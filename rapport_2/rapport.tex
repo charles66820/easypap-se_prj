@@ -34,9 +34,9 @@
 On a fait les modifications :
 
 Pour \emph{ssandPile\_do\_tile\_opt()} on a retiré les appels à \em{table(out, i, j)}
-pour passer par une varaible intermediaire result. Cette modification permet au compilateur
+pour passer par une variable intermediaire result. Cette modification permet au compilateur
 de vectoriser car il peut maintenant facilement voir que les différentes lignes peuvent être
-calculés en parallels.\\
+calculées en parallele.\\
 
 Nous avons modifié ces lignes :
 \inputminted[
@@ -60,7 +60,7 @@ Le code de la fonction final :
     lastline=45
 ]{c}{codes/sync_do_tile_opt.c}
 
-Nous avons verifié et on obtient le même résultats et le même nombre d'iterations (69190)
+Nous avons verifié et on obtient le même résultat et le même nombre d'iterations (69190)
 avec la version par défaut et la version opt.\\
 \begin{figure}[H]
     \centering
@@ -127,8 +127,8 @@ Le gain de performance est de $1.2$ car $\frac{37990}{31405}$
 
 \section{OpenMP implementation of the synchronous version (4.2)}
 
-Pour \emph{ssandPile\_compute\_omp()} on a fait en sorte de partourir chaque grain de sable
-puis on ajouter un \em{pragam omp for} pour que chaque grain de sable sois calculer par un thread.\\
+Pour \emph{ssandPile\_compute\_omp()} on a fait en sorte de parcourir chaque grain de sable
+puis on a ajouté un \em{pragam omp for} pour que chaque grain de sable soit calculé par un thread.\\
 
 Le code de la fonction :
 \inputminted[
@@ -139,8 +139,8 @@ Le code de la fonction :
     linenos
 ]{c}{codes/sync_omp.c}
 
-Pour \emph{ssandPile\_compute\_omp\_tiled()} on a dupliquer la version tile pour y ajouter
-un \em{pragam omp for} avec un \em{collapse(2)} pour que les tuiles soit calculer pars des threads.\\
+Pour \emph{ssandPile\_compute\_omp\_tiled()} on a dupliqué la version tile pour y ajouter
+un \em{pragam omp for} avec un \em{collapse(2)} pour que les tuiles soient calculés par des threads.\\
 
 La heatmap montre que en moyenne, le schedule static est meilleur que le dynamique,
 cependant on cherche à resoudre un problème précis, donc on va chercher l'accélération maximale.
@@ -150,12 +150,12 @@ Ici ce sera avec des tuiles de width 512 et de height 4 en schedule dynamique.
     \includegraphics[width=1\linewidth]{ssand_omp_tiled}
 \end{figure}
 
-Pour \emph{ssandPile\_compute\_omp\_taskloop()} on a dupliquer la version tile pour y ajouter
-un \em{pragam omp single}, pour que un thread definisse les taches, et un \em{pragam omp task}
-devant l'appelle de la fonction \em{do\_tile()} pour que le calcule des tuiles ce trouve dans un thread.\\
+Pour \emph{ssandPile\_compute\_omp\_taskloop()} on a dupliqué la version tile pour y ajouter
+un \em{pragam omp single}, pour qu'un thread definisse les taches, et un \em{pragam omp task}
+devant l'appelle de la fonction \em{do\_tile()} pour que le calcule des tuiles se trouve dans un thread.\\
 
-On vois que taskloop avec des tuile de taille 64 et 32 est presque aussi bonne que omp\_tile avec
-des tuile de taille 64, 32 et 16. Et que taskloop nest pas trés efficace avec des tuille de taille 8 ou 16.
+On voit que taskloop avec des tuile de taille 64 et 32 est presque aussi bonne que omp\_tile avec
+des tuiles de taille 64, 32 et 16. Et que taskloop n'est pas très efficace avec des tuiles de taille 8 ou 16.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{ssand-xp-all_taskloop.pdf}
@@ -199,9 +199,6 @@ Le code de la fonction final :
     \caption{Verification du résultats pour asandPile}
 \end{figure}
 
-Le gain de performance par rapport au séquentiel avec tuiles optimisées est de $1.98$ car
-$\frac{30927.379}{15641.740}$
-
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{Heatmap-asand_omp}
@@ -214,7 +211,6 @@ et après vérification, le programme ne fonctionne pas sur ces tailles là.
 Néanmoins, avec ces résultats, ont en déduit que le schedule static,1 avec une width de 32 et une height
 de 4 est la meilleure option.
 
-% TODO: Then you can compare the performance of all variants on the size 512 case.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{asand-xp-all_8_16.pdf}

@@ -153,12 +153,12 @@ Pour \emph{ssandPile\_compute\_omp\_taskloop()} on a dupliquer la version tile p
 un \em{pragam omp single}, pour que un thread definisse les taches, et un \em{pragam omp task}
 devant l'appelle de la fonction \em{do\_tile()} pour que le calcule des tuiles ce trouve dans un thread.\\
 
-% TODO: comparaision avec taskloop
+On vois que taskloop avec des tuile de taille 64 et 32 est presque aussi bonne que omp\_tile avec
+des tuile de taille 64, 32 et 16. Et que taskloop nest pas trés efficace avec des tuille de taille 8 ou 16.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{ssand-xp-all_8_16.pdf}
-    \includegraphics[width=1\linewidth]{ssand-xp-all_32_64.pdf}
-    \caption{\small{ssandPile comparaison de toutes les variants}}
+    \includegraphics[width=1\linewidth]{ssand-xp-all_taskloop.pdf}
+    \caption{\small{ssandPile comparaison de taskloop avec toutes les variants}}
     % \label{fig:ssand-xp-all}
 \end{figure}
 

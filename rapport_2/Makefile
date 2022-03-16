@@ -12,4 +12,4 @@ clean:
 .SUFFIXES: .pdf .tex
 
 $(MAIN_TEX).pdf:
-	$(TEX) $(TEX_ARG) $(MAIN_TEX).tex
+	$(TEX) $(TEX_ARG) $(MAIN_TEX).tex && $(TEX) $(TEX_ARG) $(MAIN_TEX).tex

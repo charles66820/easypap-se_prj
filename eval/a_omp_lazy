@@ -1,1 +1,1 @@
-OMP_NUM_THREADS=46 ./run -k asandPile -v omp_lazy -wt opt -n -s 2048 -a alea
+OMP_SCHEDULE=static,1 OMP_NUM_THREADS=46 ./run -k asandPile -v omp_lazy -wt opt -n -s 2048 -a alea -tw 32 -th 4

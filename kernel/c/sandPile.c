@@ -726,47 +726,53 @@ unsigned asandPile_compute_omp_task(unsigned nb_iter)
 }
 
 
-void mallocFailure2D(int** tab2D, char* str)
-{
-  if(tab2D==NULL)
-  {
-    fprintf(stderr, "%s", str);
-    exit(EXIT_FAILURE);
-  }
+// void mallocFailure2D(int** tab2D, char* str)
+// {
+//   if(tab2D==NULL)
+//   {
+//     fprintf(stderr, "%s", str);
+//     exit(EXIT_FAILURE);
+//   }
+// }
+
+// void mallocFailure(int* tab1D, char* str)
+// {
+//   if(tab1D==NULL)
+//   {
+//     fprintf(stderr, "%s", str);
+//     exit(EXIT_FAILURE);
+//   }
+// }
+
+// int** callocTab2D(unsigned int length, unsigned int height)
+// {
+//   int** tab = (int**)malloc(sizeof(int*)*length);
+//   mallocFailure2D(tab, "Malloc failure in callocTab2D!\n");
+
+//   for(unsigned int i=0; i<length; i++)
+//   {
+//     tab[i] = (int*)calloc(height, sizeof(int));
+//     mallocFailure(tab[i], "Calloc failure in callocTab2D!\n");
+//   }
+
+//   return tab;
+// }
+
+// void freeTab2D(int** tab, int length)
+// {
+//   for(unsigned int i=0; i<length; i++)
+//   {
+//     free(tab[i]);
+//   }
+//   free(tab);
+// }
+
+void asandPile_init_lazy() {
+  ssandPile_init_lazy();
 }
-
-void mallocFailure(int* tab1D, char* str)
-{
-  if(tab1D==NULL)
-  {
-    fprintf(stderr, "%s", str);
-    exit(EXIT_FAILURE);
-  }
+void asandPile_finalize_lazy() {
+  ssandPile_finalize_lazy();
 }
-
-int** callocTab2D(unsigned int length, unsigned int height)
-{
-  int** tab = (int**)malloc(sizeof(int*)*length);
-  mallocFailure2D(tab, "Malloc failure in callocTab2D!\n");
-
-  for(unsigned int i=0; i<length; i++)
-  {
-    tab[i] = (int*)calloc(height, sizeof(int));
-    mallocFailure(tab[i], "Calloc failure in callocTab2D!\n");
-  }
-
-  return tab;
-}
-
-void freeTab2D(int** tab, int length)
-{
-  for(unsigned int i=0; i<length; i++)
-  {
-    free(tab[i]);
-  }
-  free(tab);
-}
-
 /////////////////////////////  Lazy version (tiled)
 // Suggested cmdline(s):
 // ./run -k asandPile -v lazy -s 512 -m
@@ -774,6 +780,57 @@ void freeTab2D(int** tab, int length)
 // ./run -k asandPile -v lazy -wt opt -s 512 -m
 //
 unsigned asandPile_compute_lazy(unsigned nb_iter)
+{
+  for (unsigned it = 1; it <= nb_iter; it++)
+  {
+    int change = 0;
+
+    for (int y = 0; y < DIM; y += TILE_H)
+      for (int x = 0; x < DIM; x += TILE_W)
+      {
+        int localChange = 0;
+        int ty = y / TILE_H;
+        int tx = x / TILE_W;
+
+        if ((in == 0 &&
+              (
+                (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+              )
+            ) ||
+            (in == 1 &&
+              (
+                (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+              )
+            )
+          )
+        // if ((in == 0 && tiled_table1(ty, tx)) ||
+        //   (in == 1 && tiled_table2(ty, tx)))
+        {
+          localChange =
+              do_tile(x + (x == 0), y + (y == 0),
+                      TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                      TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
+        }
+
+        if (in == 0)
+          tiled_table2(ty, tx) = localChange;
+        else
+          tiled_table1(ty, tx) = localChange;
+        change |= localChange;
+      }
+    if (change == 0)
+      return it;
+  }
+
+  return 0;
+}
+/*unsigned asandPile_compute_lazy(unsigned nb_iter)
 {
   int** tab1 = callocTab2D(NB_TILES_X, NB_TILES_Y);
   int** tab2 = callocTab2D(NB_TILES_X, NB_TILES_Y);
@@ -797,7 +854,7 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
               change |=
                   do_tile(x + (x == 0), y + (y == 0),
                           TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
+                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0); // CPU id
               tab2[pos_x][pos_y] = change;
             }
           }
@@ -808,7 +865,7 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
               change |=
                   do_tile(x + (x == 0), y + (y == 0),
                           TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
+                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0); // CPU id
               tab1[pos_x][pos_y] = change;
             }
           }
@@ -822,14 +879,205 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
   freeTab2D(tab2, NB_TILES_X);
 
   return 0;
-}
+}*/
 
+void asandPile_init_omp_lazy() {
+  asandPile_init_lazy();
+}
+void asandPile_finalize_omp_lazy() {
+  asandPile_finalize_lazy();
+}
 /////////////////////////////  Lazy version (tiled)
 // Suggested cmdline(s):
 // ./run -k asandPile -v omp_lazy -s 512 -m
 //
 // ./run -k asandPile -v omp_lazy -wt opt -s 512 -m
 //
+unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
+{
+  int res = 0;
+
+  for (unsigned it = 1; it <= nb_iter; it++)
+  {
+    int change = 0;
+
+    //BLEU
+#pragma omp parallel for schedule(runtime) reduction(|: change)
+    for(int y=0; y<DIM; y+=2*TILE_H)
+    {
+      for (int x = y%(TILE_H*2); x < DIM; x += TILE_W*2)
+        {
+          int localChange = 0;
+          int ty = y / TILE_H;
+          int tx = x / TILE_W;
+
+        if ((in == 0 &&
+              (
+                (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+              )
+            ) ||
+            (in == 1 &&
+              (
+                (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+              )
+            )
+          )
+          {
+            localChange =
+                do_tile(x + (x == 0), y + (y == 0),
+                        TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                        TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+          }
+
+          if (in == 0)
+            tiled_table2(ty, tx) = localChange;
+          else
+            tiled_table1(ty, tx) = localChange;
+          change |= localChange;
+        }
+    }
+
+    //ROUGE
+#pragma omp parallel for schedule(runtime) reduction(|: change)
+    for(int y=0; y<DIM; y+=2*TILE_H)
+    {
+      for (int x = (y+TILE_H)%(TILE_H*2); x < DIM; x += TILE_W*2)
+        {
+          int localChange = 0;
+          int ty = y / TILE_H;
+          int tx = x / TILE_W;
+
+        if ((in == 0 &&
+              (
+                (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+              )
+            ) ||
+            (in == 1 &&
+              (
+                (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+              )
+            )
+          )
+          {
+            localChange =
+                do_tile(x + (x == 0), y + (y == 0),
+                        TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                        TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+          }
+
+          if (in == 0)
+            tiled_table2(ty, tx) = localChange;
+          else
+            tiled_table1(ty, tx) = localChange;
+          change |= localChange;
+        }
+    }
+
+    //VERT
+#pragma omp parallel for schedule(runtime) reduction(|: change)
+    for(int y=TILE_H; y<DIM; y+=2*TILE_H)
+    {
+      for (int x = y%(TILE_H*2); x < DIM; x += TILE_W*2)
+        {
+          int localChange = 0;
+          int ty = y / TILE_H;
+          int tx = x / TILE_W;
+
+        if ((in == 0 &&
+              (
+                (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+              )
+            ) ||
+            (in == 1 &&
+              (
+                (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+              )
+            )
+          )
+          {
+            localChange =
+                do_tile(x + (x == 0), y + (y == 0),
+                        TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                        TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+          }
+
+          if (in == 0)
+            tiled_table2(ty, tx) = localChange;
+          else
+            tiled_table1(ty, tx) = localChange;
+          change |= localChange;
+        }
+    }
+
+    //NOIR
+#pragma omp parallel for schedule(runtime) reduction(|: change)
+    for(int y=TILE_H; y<DIM; y+=2*TILE_H)
+    {
+      for (int x = (y+TILE_H)%(TILE_H*2); x < DIM; x += TILE_W*2)
+        {
+          int localChange = 0;
+          int ty = y / TILE_H;
+          int tx = x / TILE_W;
+
+        if ((in == 0 &&
+              (
+                (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+              )
+            ) ||
+            (in == 1 &&
+              (
+                (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
+                (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
+                (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+              )
+            )
+          )
+          {
+            localChange =
+                do_tile(x + (x == 0), y + (y == 0),
+                        TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                        TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
+          }
+
+          if (in == 0)
+            tiled_table2(ty, tx) = localChange;
+          else
+            tiled_table1(ty, tx) = localChange;
+          change |= localChange;
+        }
+    }
+
+    if (change == 0) {
+      res = it;
+      break;
+    }
+  }
+
+  return res;
+}
+/*
 unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
 {
   int** tab1 = callocTab2D(NB_TILES_X, NB_TILES_Y);
@@ -1008,3 +1256,4 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
   freeTab2D(tab2, NB_TILES_X);
   return 0;
 }
+*/

@@ -8,6 +8,8 @@
 typedef unsigned int TYPE;
 
 static TYPE *TABLE = NULL;
+static TYPE *TILED_TABLE1 = NULL;
+static TYPE *TILED_TABLE2 = NULL;
 
 static inline TYPE *atable_cell(TYPE *restrict i, int y, int x)
 {
@@ -356,6 +358,26 @@ unsigned ssandPile_compute_omp_taskloop(unsigned nb_iter)
   return 0;
 }
 
+void ssandPile_init_lazy()
+{
+  ssandPile_init();
+  int nbCell = NB_TILES_Y * (NB_TILES_X + 1);
+  TILED_TABLE1 = malloc(nbCell * sizeof(TYPE));
+  for (TYPE i = 0; i < nbCell; i++) TILED_TABLE1[i] = 1;
+
+  TILED_TABLE2 = calloc(nbCell, sizeof(TYPE));
+}
+
+void ssandPile_finalize_lazy()
+{
+  ssandPile_finalize();
+  free(TILED_TABLE1);
+  free(TILED_TABLE2);
+}
+
+#define tiled_table1(y, x) (TILED_TABLE1[((y) * NB_TILES_X) + (x)])
+#define tiled_table2(y, x) (TILED_TABLE2[((y) * NB_TILES_X) + (x)])
+
 /////////////////////////////  Tiled sequential version (tiled lazy)
 // Suggested cmdline(s):
 // ./run -k ssandPile -v lazy -s 512 -m
@@ -364,10 +386,6 @@ unsigned ssandPile_compute_omp_taskloop(unsigned nb_iter)
 //
 unsigned ssandPile_compute_lazy(unsigned nb_iter)
 {
-  int tuile1[NB_TILES_Y][NB_TILES_X] __attribute__ ((unused));
-
-  int tuile2[NB_TILES_Y][NB_TILES_X] __attribute__ ((unused));
-
   for (unsigned it = 1; it <= nb_iter; it++)
   {
     int change = 0;
@@ -377,14 +395,25 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
       {
         int localChange = 0;
         int ty = y / TILE_H;
-        int tx = y / TILE_W;
+        int tx = x / TILE_W;
 
-        if (it == 1 || ((it & 1) == 0 &&
-             (tuile2[ty - 1][tx] == 1 || tuile2[ty + 1][tx] == 1 ||
-              tuile2[ty][tx - 1] == 1 || tuile2[ty][tx + 1] == 1)) ||
-            ((it & 1) == 1 &&
-             (tuile1[ty - 1][tx] == 1 || tuile1[ty + 1][tx] == 1 ||
-              tuile1[ty][tx - 1] == 1 || tuile1[ty][tx + 1] == 1)))
+        if ((in == 0 &&
+              (
+                (ty == 0 || tiled_table1(ty - 1, tx) == 1) ||
+                (ty == NB_TILES_Y - 1 || tiled_table1(ty + 1, tx) == 1) ||
+                (tx == 0 || tiled_table1(ty, tx - 1) == 1) ||
+                (tx == NB_TILES_X - 1 || tiled_table1(ty, tx + 1) == 1)
+              )
+            ) ||
+            (in == 1 &&
+              (
+                (ty == 0 || tiled_table2(ty - 1, tx) == 1) ||
+                (ty == NB_TILES_Y - 1 || tiled_table2(ty + 1, tx) == 1) ||
+                (tx == 0 || tiled_table2(ty, tx - 1) == 1) ||
+                (tx == NB_TILES_X - 1 || tiled_table2(ty, tx + 1) == 1)
+              )
+            )
+          )
         {
           localChange =
               do_tile(x + (x == 0), y + (y == 0),
@@ -392,10 +421,10 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
                       TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
         }
 
-        if ((it & 1) == 0)
-          tuile1[ty][tx] = localChange;
+        if (in == 0)
+          tiled_table2(ty, tx) = localChange;
         else
-          tuile2[ty][tx] = localChange;
+          tiled_table1(ty, tx) = localChange;
         change |= localChange;
       }
     swap_tables();
@@ -406,6 +435,12 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
   return 0;
 }
 
+void ssandPile_init_omp_lazy() {
+  ssandPile_init_lazy();
+}
+void ssandPile_finalize_omp_lazy() {
+  ssandPile_finalize_lazy();
+}
 /////////////////////////////  Tiled sequential version (tiled lazy)
 // Suggested cmdline(s):
 // ./run -k ssandPile -v omp_lazy -s 512 -m
@@ -415,9 +450,6 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
 unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
 {
   int res = 0;
-
-  int tuile1[NB_TILES_Y][NB_TILES_X] __attribute__ ((unused));
-  int tuile2[NB_TILES_Y][NB_TILES_X] __attribute__ ((unused));
 
   for (unsigned it = 1; it <= nb_iter; it++)
   {
@@ -429,14 +461,25 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
       {
         int localChange = 0;
         int ty = y / TILE_H;
-        int tx = y / TILE_W;
+        int tx = x / TILE_W;
 
-        if (it == 1 || ((it & 1) == 0 &&
-             (tuile2[ty - 1][tx] == 1 || tuile2[ty + 1][tx] == 1 ||
-              tuile2[ty][tx - 1] == 1 || tuile2[ty][tx + 1] == 1)) ||
-            ((it & 1) == 1 &&
-             (tuile1[ty - 1][tx] == 1 || tuile1[ty + 1][tx] == 1 ||
-              tuile1[ty][tx - 1] == 1 || tuile1[ty][tx + 1] == 1)))
+        if ((in == 0 &&
+              (
+                (ty == 0 || tiled_table1(ty - 1, tx) == 1) ||
+                (ty == NB_TILES_Y - 1 || tiled_table1(ty + 1, tx) == 1) ||
+                (tx == 0 || tiled_table1(ty, tx - 1) == 1) ||
+                (tx == NB_TILES_X - 1 || tiled_table1(ty, tx + 1) == 1)
+              )
+            ) ||
+            (in == 1 &&
+              (
+                (ty == 0 || tiled_table2(ty - 1, tx) == 1) ||
+                (ty == NB_TILES_Y - 1 || tiled_table2(ty + 1, tx) == 1) ||
+                (tx == 0 || tiled_table2(ty, tx - 1) == 1) ||
+                (tx == NB_TILES_X - 1 || tiled_table2(ty, tx + 1) == 1)
+              )
+            )
+          )
         {
           localChange =
               do_tile(x + (x == 0), y + (y == 0),
@@ -444,11 +487,10 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
                       TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
         }
 
-        if ((it & 1) == 0)
-          tuile1[ty][tx] = localChange;
+        if (in == 0)
+          tiled_table2(ty, tx) = localChange;
         else
-          tuile2[ty][tx] = localChange;
-
+          tiled_table1(ty, tx) = localChange;
         change |= localChange;
       }
     swap_tables();

@@ -10,28 +10,14 @@ easypapOptions = {
 
 # OMP Internal Control Variable
 ompICV = {
-    "OMP_SCHEDULE=": ["dynamic"],
+    "OMP_SCHEDULE=": ["static", "static,1", "dynamic"],
     "OMP_NUM_THREADS=": [1] + list(range(2, 49, 4)) + [47, 48]
 }
 
 nbrun = 3
 
-easypapOptions["-v "] = ["seq", "omp"]
-easypapOptions["-of "] = ["xp/ssand-xp-seqVsOmp.csv"]
-
-# Lancement des experiences
-execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")
-
-
-easypapOptions["-v "] = ["tiled", "omp_tiled"]
-easypapOptions["-of "] = ["xp/ssand-xp-tiledVsOmpTiled.csv"]
-
-# Lancement des experiences
-execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")
-
-
-easypapOptions["-v "] = ["omp_tiled", "omp_taskloop"]
-easypapOptions["-of "] = ["xp/ssand-xp-OmpTiledVsOmpTaskLoop.csv"]
+easypapOptions["-v "] = ["seq", "omp", "tiled", "omp_tiled", "omp_taskloop"]
+easypapOptions["-of "] = ["xp/ssand-xp-all.csv"]
 
 # Lancement des experiences
 execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")

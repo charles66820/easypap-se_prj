@@ -358,6 +358,13 @@ unsigned ssandPile_compute_omp_taskloop(unsigned nb_iter)
   return 0;
 }
 
+static int tt = 0;
+
+static inline void swap_tt()
+{
+  tt = tt ^ 1; // tt = !tt;
+}
+
 void ssandPile_init_lazy()
 {
   ssandPile_init();
@@ -397,7 +404,7 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
         int ty = y / TILE_H;
         int tx = x / TILE_W;
 
-        if ((in == 0 &&
+        if ((tt == 0 &&
               (
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
@@ -405,7 +412,7 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
                 (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
               )
             ) ||
-            (in == 1 &&
+            (tt == 1 &&
               (
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
@@ -421,13 +428,14 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
                       TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
         }
 
-        if (in == 0)
+        if (tt == 0)
           tiled_table2(ty, tx) = localChange;
         else
           tiled_table1(ty, tx) = localChange;
         change |= localChange;
       }
     swap_tables();
+    swap_tt();
     if (change == 0)
       return it;
   }
@@ -463,7 +471,7 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
         int ty = y / TILE_H;
         int tx = x / TILE_W;
 
-        if ((in == 0 &&
+        if ((tt == 0 &&
               (
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
@@ -471,7 +479,7 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
                 (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
               )
             ) ||
-            (in == 1 &&
+            (tt == 1 &&
               (
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
@@ -487,13 +495,14 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
                       TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
         }
 
-        if (in == 0)
+        if (tt == 0)
           tiled_table2(ty, tx) = localChange;
         else
           tiled_table1(ty, tx) = localChange;
         change |= localChange;
       }
     swap_tables();
+    swap_tt();
     if (change == 0) {
       res = it;
       break;
@@ -792,7 +801,7 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
         int ty = y / TILE_H;
         int tx = x / TILE_W;
 
-        if ((in == 0 &&
+        if ((tt == 0 &&
               (
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
@@ -800,7 +809,7 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
                 (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
               )
             ) ||
-            (in == 1 &&
+            (tt == 1 &&
               (
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
@@ -809,8 +818,8 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
               )
             )
           )
-        // if ((in == 0 && tiled_table1(ty, tx)) ||
-        //   (in == 1 && tiled_table2(ty, tx)))
+        // if ((tt == 0 && tiled_table1(ty, tx)) ||
+        //   (tt == 1 && tiled_table2(ty, tx)))
         {
           localChange =
               do_tile(x + (x == 0), y + (y == 0),
@@ -818,12 +827,14 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
                       TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0 /* CPU id */);
         }
 
-        if (in == 0)
+        if (tt == 0)
           tiled_table2(ty, tx) = localChange;
         else
           tiled_table1(ty, tx) = localChange;
         change |= localChange;
       }
+
+    swap_tt();
     if (change == 0)
       return it;
   }
@@ -911,7 +922,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
           int ty = y / TILE_H;
           int tx = x / TILE_W;
 
-        if ((in == 0 &&
+        if ((tt == 0 &&
               (
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
@@ -919,7 +930,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
               )
             ) ||
-            (in == 1 &&
+            (tt == 1 &&
               (
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
@@ -935,7 +946,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                         TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
           }
 
-          if (in == 0)
+          if (tt == 0)
             tiled_table2(ty, tx) = localChange;
           else
             tiled_table1(ty, tx) = localChange;
@@ -953,7 +964,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
           int ty = y / TILE_H;
           int tx = x / TILE_W;
 
-        if ((in == 0 &&
+        if ((tt == 0 &&
               (
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
@@ -961,7 +972,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
               )
             ) ||
-            (in == 1 &&
+            (tt == 1 &&
               (
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
@@ -977,7 +988,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                         TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
           }
 
-          if (in == 0)
+          if (tt == 0)
             tiled_table2(ty, tx) = localChange;
           else
             tiled_table1(ty, tx) = localChange;
@@ -995,7 +1006,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
           int ty = y / TILE_H;
           int tx = x / TILE_W;
 
-        if ((in == 0 &&
+        if ((tt == 0 &&
               (
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
@@ -1003,7 +1014,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
               )
             ) ||
-            (in == 1 &&
+            (tt == 1 &&
               (
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
@@ -1019,7 +1030,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                         TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
           }
 
-          if (in == 0)
+          if (tt == 0)
             tiled_table2(ty, tx) = localChange;
           else
             tiled_table1(ty, tx) = localChange;
@@ -1037,7 +1048,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
           int ty = y / TILE_H;
           int tx = x / TILE_W;
 
-        if ((in == 0 &&
+        if ((tt == 0 &&
               (
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
@@ -1045,7 +1056,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
               )
             ) ||
-            (in == 1 &&
+            (tt == 1 &&
               (
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
@@ -1061,7 +1072,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                         TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
           }
 
-          if (in == 0)
+          if (tt == 0)
             tiled_table2(ty, tx) = localChange;
           else
             tiled_table1(ty, tx) = localChange;
@@ -1069,6 +1080,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
         }
     }
 
+    swap_tt();
     if (change == 0) {
       res = it;
       break;

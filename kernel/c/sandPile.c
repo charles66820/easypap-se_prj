@@ -7,7 +7,7 @@
 
 typedef unsigned int TYPE;
 
-static TYPE *TABLE = NULL;
+static TYPE *restrict TABLE = NULL;
 static TYPE *TILED_TABLE1 = NULL;
 static TYPE *TILED_TABLE2 = NULL;
 

@@ -406,7 +406,8 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1) ||
+                tiled_table1(ty, tx) == 1
               )
             ) ||
             (tt == 1 &&
@@ -414,7 +415,8 @@ unsigned ssandPile_compute_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)||
+                tiled_table2(ty, tx) == 1
               )
             )
           )
@@ -473,7 +475,8 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1) ||
+                tiled_table1(ty, tx) == 1
               )
             ) ||
             (tt == 1 &&
@@ -481,7 +484,8 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1) ||
+                tiled_table2(ty, tx) == 1
               )
             )
           )
@@ -796,7 +800,8 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1) ||
+                tiled_table1(ty, tx) == 1
               )
             ) ||
             (tt == 1 &&
@@ -804,7 +809,8 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1) ||
+                tiled_table2(ty, tx) == 1
               )
             )
           )
@@ -917,7 +923,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1) ||
+                tiled_table1(ty, tx) == 1
+
               )
             ) ||
             (tt == 1 &&
@@ -925,7 +933,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1) ||
+                tiled_table2(ty, tx) == 1
+
               )
             )
           )
@@ -959,7 +969,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1) ||
+                tiled_table1(ty, tx) == 1
+
               )
             ) ||
             (tt == 1 &&
@@ -967,7 +979,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1) ||
+                tiled_table2(ty, tx) == 1
+
               )
             )
           )
@@ -1001,7 +1015,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1) ||
+                tiled_table1(ty, tx) == 1
+
               )
             ) ||
             (tt == 1 &&
@@ -1009,7 +1025,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1) ||
+                tiled_table2(ty, tx) == 1
+
               )
             )
           )
@@ -1043,7 +1061,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table1(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table1(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table1(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table1(ty, tx + 1) == 1) ||
+                tiled_table1(ty, tx) == 1
+
               )
             ) ||
             (tt == 1 &&
@@ -1051,7 +1071,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
                 (ty != 0 && tiled_table2(ty - 1, tx) == 1) ||
                 (ty != NB_TILES_Y - 1 && tiled_table2(ty + 1, tx) == 1) ||
                 (tx != 0 && tiled_table2(ty, tx - 1) == 1) ||
-                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1)
+                (tx != NB_TILES_X - 1 && tiled_table2(ty, tx + 1) == 1) ||
+                tiled_table2(ty, tx) == 1
+
               )
             )
           )

@@ -5,6 +5,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#pragma region init
+
 typedef unsigned int TYPE;
 
 static TYPE *restrict TABLE = NULL;
@@ -177,11 +179,17 @@ ALIAS(draw_alea);
 ALIAS(draw_big);
 ALIAS(draw_spirals);
 
+#pragma endregion init
+
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Synchronous Kernel
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
+
+#pragma region synchronousKernel
+
+#pragma region ssandInit
 
 void ssandPile_init()
 {
@@ -231,6 +239,10 @@ int ssandPile_do_tile_opt(int x, int y, int width, int height)
   return diff;
 }
 
+#pragma endregion ssandInit
+
+#pragma region ssandSeq
+
 /////////////////////////////  Sequential version (seq)
 // Suggested cmdline(s):
 // ./run -k ssandPile -v seq -s 512 -m
@@ -247,30 +259,6 @@ unsigned ssandPile_compute_seq(unsigned nb_iter)
     if (change == 0)
       return it;
   }
-  return 0;
-}
-
-/////////////////////////////  Sequential version (omp)
-// Suggested cmdline(s):
-// ./run -k ssandPile -v omp -s 512 -m
-//
-// ./run -k ssandPile -v omp -wt opt -s 512 -m
-//
-// Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
-unsigned ssandPile_compute_omp(unsigned nb_iter)
-{
-  for (unsigned it = 1; it <= nb_iter; it++)
-  {
-    int change = 0;
-#pragma omp parallel for schedule(runtime) reduction(| : change)
-    for (int y = 1; y < DIM - 1; y += 1)
-      for (int x = 1; x < DIM - 1; x += 1)
-        change |= do_tile(x, y, 1, 1, omp_get_thread_num());
-    swap_tables();
-    if (change == 0)
-      return it;
-  }
-
   return 0;
 }
 
@@ -293,6 +281,34 @@ unsigned ssandPile_compute_tiled(unsigned nb_iter)
                           TILE_W - ((x + TILE_W == DIM) + (x == 0)),
                           TILE_H - ((y + TILE_H == DIM) + (y == 0)),
                           0 /* CPU id */);
+    swap_tables();
+    if (change == 0)
+      return it;
+  }
+
+  return 0;
+}
+
+#pragma endregion ssandSeq
+
+#pragma region ssandOmp
+
+/////////////////////////////  Sequential version (omp)
+// Suggested cmdline(s):
+// ./run -k ssandPile -v omp -s 512 -m
+//
+// ./run -k ssandPile -v omp -wt opt -s 512 -m
+//
+// Renvoie le nombre d'itérations effectuées avant stabilisation, ou 0
+unsigned ssandPile_compute_omp(unsigned nb_iter)
+{
+  for (unsigned it = 1; it <= nb_iter; it++)
+  {
+    int change = 0;
+#pragma omp parallel for schedule(runtime) reduction(| : change)
+    for (int y = 1; y < DIM - 1; y += 1)
+      for (int x = 1; x < DIM - 1; x += 1)
+        change |= do_tile(x, y, 1, 1, omp_get_thread_num());
     swap_tables();
     if (change == 0)
       return it;
@@ -362,6 +378,10 @@ unsigned ssandPile_compute_omp_taskloop(unsigned nb_iter)
 
   return 0;
 }
+
+#pragma endregion ssandOmp
+
+#pragma region ssandLazy
 
 static int tt = 0;
 
@@ -504,6 +524,7 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
 
   return res;
 }
+#pragma endregion ssandLazy
 
 // Only called when --dump or --thumbnails is used
 void ssandPile_refresh_img_ocl()
@@ -516,11 +537,17 @@ void ssandPile_refresh_img_ocl()
   ssandPile_refresh_img();
 }
 
+#pragma endregion synchronousKernel
+
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Asynchronous Kernel
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
+
+#pragma region asynchronousKernel
+
+#pragma region asandInit
 
 void asandPile_init()
 {
@@ -585,6 +612,10 @@ int asandPile_do_tile_opt(int x, int y, int width, int height)
   return change;
 }
 
+#pragma endregion asandInit
+
+#pragma region asandSeq
+
 /////////////////////////////  Sequential version (seq)
 // Suggested cmdline(s):
 // ./run -k asandPile -v seq -s 512 -m
@@ -630,6 +661,10 @@ unsigned asandPile_compute_tiled(unsigned nb_iter)
 
   return 0;
 }
+
+#pragma endregion asandSeq
+
+#pragma region asandOmp
 
 /////////////////////////////  Tiled sequential version (tiled)
 // Suggested cmdline(s):
@@ -744,46 +779,9 @@ unsigned asandPile_compute_omp_task(unsigned nb_iter)
   return 0;
 }
 
-// void mallocFailure2D(int** tab2D, char* str)
-// {
-//   if(tab2D==NULL)
-//   {
-//     fprintf(stderr, "%s", str);
-//     exit(EXIT_FAILURE);
-//   }
-// }
+#pragma endregion asandOmp
 
-// void mallocFailure(int* tab1D, char* str)
-// {
-//   if(tab1D==NULL)
-//   {
-//     fprintf(stderr, "%s", str);
-//     exit(EXIT_FAILURE);
-//   }
-// }
-
-// int** callocTab2D(unsigned int length, unsigned int height)
-// {
-//   int** tab = (int**)malloc(sizeof(int*)*length);
-//   mallocFailure2D(tab, "Malloc failure in callocTab2D!\n");
-
-//   for(unsigned int i=0; i<length; i++)
-//   {
-//     tab[i] = (int*)calloc(height, sizeof(int));
-//     mallocFailure(tab[i], "Calloc failure in callocTab2D!\n");
-//   }
-
-//   return tab;
-// }
-
-// void freeTab2D(int** tab, int length)
-// {
-//   for(unsigned int i=0; i<length; i++)
-//   {
-//     free(tab[i]);
-//   }
-//   free(tab);
-// }
+#pragma region asandLazy
 
 void asandPile_init_lazy()
 {
@@ -844,56 +842,6 @@ unsigned asandPile_compute_lazy(unsigned nb_iter)
 
   return 0;
 }
-/*unsigned asandPile_compute_lazy(unsigned nb_iter)
-{
-  int** tab1 = callocTab2D(NB_TILES_X, NB_TILES_Y);
-  int** tab2 = callocTab2D(NB_TILES_X, NB_TILES_Y);
-
-
-  for (unsigned it = 1; it <= nb_iter; it++)
-  {
-    int change = 0;
-
-    for(int i=0; i<2; i++)
-      for (int y = 0; y < DIM; y += TILE_H)
-        for (int x = 0; x < DIM; x += TILE_W)
-        {
-          int pos_x = x/TILE_W;
-          int pos_y = y/TILE_H;
-          //printf("X:%d\tY:%d\n", pos_x, pos_y);
-          if(i%2==0)
-          {
-            if(!tab1[pos_x][pos_y])
-            {
-              change |=
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0); // CPU id
-              tab2[pos_x][pos_y] = change;
-            }
-          }
-          else
-          {
-            if(!tab2[pos_x][pos_y])
-            {
-              change |=
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), 0); // CPU id
-              tab1[pos_x][pos_y] = change;
-            }
-          }
-        }
-
-    if (change == 0)
-      return it;
-  }
-
-  freeTab2D(tab1, NB_TILES_X);
-  freeTab2D(tab2, NB_TILES_X);
-
-  return 0;
-}*/
 
 void asandPile_init_omp_lazy()
 {
@@ -1079,183 +1027,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
 
   return res;
 }
-/*
-unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
-{
-  int** tab1 = callocTab2D(NB_TILES_X, NB_TILES_Y);
-  int** tab2 = callocTab2D(NB_TILES_X, NB_TILES_Y);
 
+#pragma endregion asandLazy
 
-  for (unsigned it = 1; it <= nb_iter; it++)
-  {
-    int change = 0;
-
-      //BLEU
-#pragma omp parallel for schedule(runtime) reduction(|: change)
-      for(int y=0; y<DIM; y+=2*TILE_H)
-      {
-        for (int x = y%(TILE_H*2); x < DIM; x += TILE_W*2)
-          {
-            int pos_x = x/TILE_W;
-            int pos_y = y/TILE_H;
-            if(!tab1[pos_x][pos_y])
-            {
-              int localChange =
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-              tab2[pos_x][pos_y] = localChange;
-              change |= localChange;
-            }
-          }
-      }
-
-      //ROUGE
-  #pragma omp parallel for schedule(runtime) reduction(|: change)
-      for(int y=0; y<DIM; y+=2*TILE_H)
-      {
-        for (int x = (y+TILE_H)%(TILE_H*2); x < DIM; x += TILE_W*2)
-          {
-            int pos_x = x/TILE_W;
-            int pos_y = y/TILE_H;
-            if(!tab1[pos_x][pos_y])
-            {
-              int localChange =
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-              tab2[pos_x][pos_y] = localChange;
-              change |= localChange;
-            }
-          }
-      }
-
-      //VERT
-  #pragma omp parallel for schedule(runtime) reduction(|: change)
-      for(int y=TILE_H; y<DIM; y+=2*TILE_H)
-      {
-        for (int x = y%(TILE_H*2); x < DIM; x += TILE_W*2)
-          {
-            int pos_x = x/TILE_W;
-            int pos_y = y/TILE_H;
-            if(!tab1[pos_x][pos_y])
-            {
-              int localChange =
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-              tab2[pos_x][pos_y] = localChange;
-              change |= localChange;
-            }
-          }
-      }
-
-      //NOIR
-  #pragma omp parallel for schedule(runtime) reduction(|: change)
-      for(int y=TILE_H; y<DIM; y+=2*TILE_H)
-      {
-        for (int x = (y+TILE_H)%(TILE_H*2); x < DIM; x += TILE_W*2)
-          {
-            int pos_x = x/TILE_W;
-            int pos_y = y/TILE_H;
-            if(!tab1[pos_x][pos_y])
-            {
-              int localChange =
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-              tab2[pos_x][pos_y] = localChange;
-              change |= localChange;
-            }
-          }
-      }
-
-  //BLEU
-#pragma omp parallel for schedule(runtime) reduction(|: change)
-      for(int y=0; y<DIM; y+=2*TILE_H)
-      {
-        for (int x = y%(TILE_H*2); x < DIM; x += TILE_W*2)
-          {
-            int pos_x = x/TILE_W;
-            int pos_y = y/TILE_H;
-            if(!tab2[pos_x][pos_y])
-            {
-              int localChange =
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-              tab1[pos_x][pos_y] = localChange;
-              change |= localChange;
-            }
-          }
-      }
-
-      //ROUGE
-  #pragma omp parallel for schedule(runtime) reduction(|: change)
-      for(int y=0; y<DIM; y+=2*TILE_H)
-      {
-        for (int x = (y+TILE_H)%(TILE_H*2); x < DIM; x += TILE_W*2)
-          {
-            int pos_x = x/TILE_W;
-            int pos_y = y/TILE_H;
-            if(!tab2[pos_x][pos_y])
-            {
-              int localChange =
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-              tab1[pos_x][pos_y] = localChange;
-              change |= localChange;
-            }
-          }
-      }
-
-      //VERT
-  #pragma omp parallel for schedule(runtime) reduction(|: change)
-      for(int y=TILE_H; y<DIM; y+=2*TILE_H)
-      {
-        for (int x = y%(TILE_H*2); x < DIM; x += TILE_W*2)
-          {
-            int pos_x = x/TILE_W;
-            int pos_y = y/TILE_H;
-            if(!tab2[pos_x][pos_y])
-            {
-              int localChange =
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-              tab1[pos_x][pos_y] = localChange;
-              change |= localChange;
-            }
-          }
-      }
-
-      //NOIR
-  #pragma omp parallel for schedule(runtime) reduction(|: change)
-      for(int y=TILE_H; y<DIM; y+=2*TILE_H)
-      {
-        for (int x = (y+TILE_H)%(TILE_H*2); x < DIM; x += TILE_W*2)
-          {
-            int pos_x = x/TILE_W;
-            int pos_y = y/TILE_H;
-            if(!tab2[pos_x][pos_y])
-            {
-              int localChange =
-                  do_tile(x + (x == 0), y + (y == 0),
-                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
-                          TILE_H - ((y + TILE_H == DIM) + (y == 0)), omp_get_thread_num());
-              tab1[pos_x][pos_y] = localChange;
-              change |= localChange;
-            }
-          }
-      }
-
-      if (change == 0)
-        return it;
-    }
-
-  freeTab2D(tab1, NB_TILES_X);
-  freeTab2D(tab2, NB_TILES_X);
-  return 0;
-}
-*/
+#pragma endregion asynchronousKernel

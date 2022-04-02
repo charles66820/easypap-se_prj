@@ -53,7 +53,7 @@ MAKEFILES	:= Makefile
 CC			:= gcc
 #CC			:= clang
 
-CFLAGS 		+= -O3 -march=native -Wall -Wno-unused-function
+CFLAGS 		+= -O3 -march=native -Wall -Wno-unused-function -Wno-unknown-pragmas
 CFLAGS		+= -I./include -I./traces/include
 LDLIBS		+= -lm
 

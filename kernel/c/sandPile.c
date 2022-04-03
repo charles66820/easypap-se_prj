@@ -536,11 +536,12 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
 
 int ssandPile_do_tile_avx(int x, int y, int width, int height)
 {
-  const __m256 vec4 = _mm256_set1_ps(4);
+  const __m256 vec4    = _mm256_set1_ps(4);
   const __m256i vec3_i = _mm256_set1_epi32(3);
 
   // Outer tiles are computed the usual way
-  if (x == 1 || x == (DIM - 1) - width || y == 1 || y == (DIM - 1) - height)
+  // if (x == 1 || x == (DIM - 1) - width || y == 1 || y == (DIM - 1) - height)
+  if (x == (DIM - 1) - width)
     return ssandPile_do_tile_opt(x, y, width, height);
 
   // Inner tiles involve no border test
@@ -565,7 +566,7 @@ int ssandPile_do_tile_avx(int x, int y, int width, int height)
 
       // result = currentPixelsRow % 4;
       __m256i res = _mm256_and_si256(currentPixelsRow_i, vec3_i); // currentPixelsRow & (4 - 1)
-      result = _mm256_cvtepi32_ps(res);
+      result      = _mm256_cvtepi32_ps(res);
 
       // result += topPixelsRow / 4;
       tmp    = _mm256_floor_ps(_mm256_div_ps(topPixelsRow, vec4));

@@ -526,6 +526,87 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
 }
 #pragma endregion ssandLazy
 
+#pragma region ssandAVX
+// Intrinsics functions
+#ifdef ENABLE_VECTO
+
+#if __AVX2__ == 1
+
+#include <immintrin.h>
+
+int ssandPile_do_tile_avx(int x, int y, int width, int height)
+{
+  const __m256 vec4 = _mm256_set1_ps(4);
+  const __m256 vec3 = _mm256_set1_ps(3);
+
+  // Outer tiles are computed the usual way
+  if (x == 0 || x == DIM - width || y == 0 || y == DIM - height)
+    return ssandPile_do_tile_opt(x, y, width, height);
+
+  // Inner tiles involve no border test
+  int diff = 0;
+  // We travel AVX_VEC_SIZE_INT and not 1 by on
+  for (int i = y; i < y + height; i++)
+    for (int j = x; j < x + width; j += AVX_VEC_SIZE_INT)
+    {
+      __m256 result;
+      __m256 tmp;
+
+      // load table(in, i, j)
+      __m256i currentPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i, j));
+      __m256 currentPixelsRow    = _mm256_cvtepi32_ps(currentPixelsRow_i);
+      // load table(in, i + 1, j)
+      __m256 topPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i + 1, j)));
+      // load table(in, i - 1, j)
+      __m256 bottomPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i - 1, j)));
+      // load table(in, i, j + 1)
+      __m256 rightPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i, j + 1)));
+      // load table(in, i, j - 1)
+      __m256 leftPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i, j - 1)));
+
+      // result = currentPixelsRow % 4;
+      result = _mm256_and_ps(currentPixelsRow, vec3); // currentPixelsRow & (4 - 1)
+      //_mm256_and_si256
+
+      // result += topPixelsRow / 4;
+      tmp    = _mm256_div_ps(topPixelsRow, vec4);
+      result = _mm256_add_ps(result, tmp);
+
+      // result += bottomPixelsRow / 4;
+      tmp    = _mm256_div_ps(bottomPixelsRow, vec4);
+      result = _mm256_add_ps(result, tmp);
+
+      // result += rightPixelsRow / 4;
+      tmp    = _mm256_div_ps(rightPixelsRow, vec4);
+      result = _mm256_add_ps(result, tmp);
+
+      // result += leftPixelsRow / 4;
+      tmp    = _mm256_div_ps(leftPixelsRow, vec4);
+      result = _mm256_add_ps(result, tmp);
+
+      // // table(out, i, j) = result;
+      __m256i result_i = _mm256_cvtps_epi32(result); // m256 => m256i : i for integer
+      _mm256_storeu_si256((__m256i *) &table(out, i, j), result_i);
+
+      // diff |= result != currentPixelsRow;
+      __m256i mask = _mm256_xor_si256(result_i, currentPixelsRow_i);
+
+      // all 0 => res = 0 : diff no change
+      // exists 1 => res = 1 : diff change to 1
+      // All the mask is not equal to zero
+      if (_mm256_testz_si256(mask, mask) != 1)
+        diff = 1;
+    }
+
+  return diff;
+}
+
+#endif
+#endif
+#pragma endregion ssandAVX
+
+#pragma region ssandOpenCL
+
 // Only called when --dump or --thumbnails is used
 void ssandPile_refresh_img_ocl()
 {
@@ -536,6 +617,8 @@ void ssandPile_refresh_img_ocl()
 
   ssandPile_refresh_img();
 }
+
+#pragma endregion ssandOpenCL
 
 #pragma endregion synchronousKernel
 

@@ -330,8 +330,8 @@ unsigned ssandPile_compute_omp_tiled(unsigned nb_iter)
     int change = 0;
 
 #pragma omp parallel for schedule(runtime) collapse(2) reduction(| : change)
-    for (int y = 0; y < DIM; y += TILE_H)
-      for (int x = 0; x < DIM; x += TILE_W)
+    for (int y = 0; y < DIM - 1; y += TILE_H)
+      for (int x = 0; x < DIM - 1; x += TILE_W)
         change |= do_tile(x + (x == 0),
                           y + (y == 0),
                           TILE_W - ((x + TILE_W == DIM) + (x == 0)),
@@ -534,14 +534,22 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
 
 #include <immintrin.h>
 
+void ssandPile_tile_check_avx (void)
+{
+  // Tile width must be larger than AVX vector size
+  easypap_vec_check (AVX_VEC_SIZE_INT, DIR_HORIZONTAL);
+}
+
 int ssandPile_do_tile_avx(int x, int y, int width, int height)
 {
-  const __m256 vec4 = _mm256_set1_ps(4);
-  const __m256 vec3 = _mm256_set1_ps(3);
+  const __m256 vec4    = _mm256_set1_ps(4);
+  const __m256i vec3_i = _mm256_set1_epi32(3);
 
   // Outer tiles are computed the usual way
-  if (x == 0 || x == DIM - width || y == 0 || y == DIM - height)
-    return ssandPile_do_tile_opt(x, y, width, height);
+  // if (x == 1 || x == (DIM - 1) - width || y == 1 || y == (DIM - 1) - height)
+  if (x == (DIM - 1) - width)
+    x -= 1;
+    // return ssandPile_do_tile_opt(x, y, width, height);
 
   // Inner tiles involve no border test
   int diff = 0;
@@ -554,7 +562,6 @@ int ssandPile_do_tile_avx(int x, int y, int width, int height)
 
       // load table(in, i, j)
       __m256i currentPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i, j));
-      __m256 currentPixelsRow    = _mm256_cvtepi32_ps(currentPixelsRow_i);
       // load table(in, i + 1, j)
       __m256 topPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i + 1, j)));
       // load table(in, i - 1, j)
@@ -565,26 +572,26 @@ int ssandPile_do_tile_avx(int x, int y, int width, int height)
       __m256 leftPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i, j - 1)));
 
       // result = currentPixelsRow % 4;
-      result = _mm256_and_ps(currentPixelsRow, vec3); // currentPixelsRow & (4 - 1)
-      //_mm256_and_si256
+      __m256i res = _mm256_and_si256(currentPixelsRow_i, vec3_i); // currentPixelsRow & (4 - 1)
+      result      = _mm256_cvtepi32_ps(res);
 
       // result += topPixelsRow / 4;
-      tmp    = _mm256_div_ps(topPixelsRow, vec4);
+      tmp    = _mm256_floor_ps(_mm256_div_ps(topPixelsRow, vec4));
       result = _mm256_add_ps(result, tmp);
 
       // result += bottomPixelsRow / 4;
-      tmp    = _mm256_div_ps(bottomPixelsRow, vec4);
+      tmp    = _mm256_floor_ps(_mm256_div_ps(bottomPixelsRow, vec4));
       result = _mm256_add_ps(result, tmp);
 
       // result += rightPixelsRow / 4;
-      tmp    = _mm256_div_ps(rightPixelsRow, vec4);
+      tmp    = _mm256_floor_ps(_mm256_div_ps(rightPixelsRow, vec4));
       result = _mm256_add_ps(result, tmp);
 
       // result += leftPixelsRow / 4;
-      tmp    = _mm256_div_ps(leftPixelsRow, vec4);
+      tmp    = _mm256_floor_ps(_mm256_div_ps(leftPixelsRow, vec4));
       result = _mm256_add_ps(result, tmp);
 
-      // // table(out, i, j) = result;
+      // table(out, i, j) = result;
       __m256i result_i = _mm256_cvtps_epi32(result); // m256 => m256i : i for integer
       _mm256_storeu_si256((__m256i *) &table(out, i, j), result_i);
 

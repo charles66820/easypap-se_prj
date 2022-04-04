@@ -9,7 +9,8 @@
             ],
             "defines": [
               "ENABLE_VECTO",
-              "__AVX2__"
+              "__AVX2__",
+              "_MM_FROUND_TO_NEG_INF"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",

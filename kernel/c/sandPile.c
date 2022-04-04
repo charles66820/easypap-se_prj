@@ -1213,7 +1213,10 @@ void ssandPile_refresh_img_mpi()
 
       MPI_Send(&table(in, 0, rankTop(rank)), sizeof(int)*DIM, MPI_INT, rank-1, 0, MPI_COMM_WORLD);
       if(rank!=size-1)
+      {
         MPI_Send(&table(in, 0, rankDown(rank)), sizeof(int)*DIM, MPI_INT, rank+1, 0, MPI_COMM_WORLD);
+        printf("");
+      }
 
       //compute ?
 

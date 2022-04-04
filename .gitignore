@@ -3,3 +3,6 @@ public
 /images
 # .clang-format
 !/.vscode/c_cpp_properties.json
+dump/
+dump-*
+/*.csv

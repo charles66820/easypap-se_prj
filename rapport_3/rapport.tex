@@ -34,7 +34,7 @@
 \subsection{4.5.1 The synchronous case}
 
 On fait le speedup avec \emph{omp\_tile} entre les tailing \emph{opt} et \emph{avx} sur la machine
-\emph{UHURA} on obtien 4483 pour opt et 4764 pour avx un speedup de 0.94 = $\frac{4483}{4764}$.
+\emph{UHURA} on obtient 4483 pour opt et 4764 pour avx un speedup de $0.94 =\frac{4483}{4764}$.
 Il n'y a pas une grande différence entre les 2 version car gcc a une très bonne vectorization.
 
 \subsection{4.5.2 The asynchronous case}
@@ -56,5 +56,13 @@ Le code de la fonction :
 \subsection{4.7.1 Basic OpenCL Implementation}
 
 % TODO:
+
+sur la machine \emph{troi} on a executer la version ocl avec une taille de 1024x1024 et des tuiles
+de taille 16x16, les 69191 iterations sont executer en 1648ms.
+
+sur la machine \emph{troi} on a executer la version omp\_tiled avec une taille de 1024x1024 et
+des tuiles de taille 16x16 et le tuilage opt, cela ce fini au bout de ...ms en ... iterations.
+
+le speedup et de $4.81=\frac{332871}{69191}$.
 
 \end{document}

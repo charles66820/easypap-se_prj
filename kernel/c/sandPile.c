@@ -1114,3 +1114,140 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
 #pragma endregion asandLazy
 
 #pragma endregion asynchronousKernel
+
+#ifdef ENABLE_MPI
+#include <mpi.h>
+#pragma region MPI
+
+static int rank, size;
+
+void ssandPile_init_mpi()
+{
+    easypap_check_mpi(); // check if MPI was correctly configured
+
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    ssandPile_init();
+}
+
+static int rankTop(int rank)
+{
+  return rank*(DIM/size);
+}
+
+static int rankDown(int rank)
+{
+  return rankTop(rank+1) - DIM;
+}
+
+static int* leftBorder(int rank, int borderSize)
+{
+  int* border = (int*)malloc(sizeof(int)*borderSize);
+  if(border==NULL)
+  {
+    fprintf(stderr, "malloc failure in leftBorder at rank %d!\n", rank);
+    exit(EXIT_FAILURE);
+  }
+  
+  for(int i=0; i<borderSize; i++)
+  {
+    border[i] = rankTop(rank)+i*DIM;
+  }
+  return border;
+}
+
+static int* rightBorder(int rank, int borderSize)
+{
+  int* border = (int*)malloc(sizeof(int)*borderSize);
+  if(border==NULL)
+  {
+    fprintf(stderr, "malloc failure in rightBorder at rank %d!\n", rank);
+    exit(EXIT_FAILURE);
+  }
+  
+  for(int i=0; i<borderSize; i++)
+  {
+    border[i] = (rankTop(rank)+DIM-1)*(i+1);
+  }
+  return border;
+}
+
+//PERHAPS ???
+static int rankSize(int rank)
+{
+  if(rank==size-1)
+  {
+    return DIM-rankTop(rank);
+  }
+  return DIM/size;
+}
+
+void ssandPile_refresh_img_mpi()
+{
+  MPI_Status status;
+  //processus Maître = reception
+  if(rank==0)
+  {
+    for(int i=1; i<size; i++)
+    {
+      MPI_Recv(&cur_img(rankTop(i), 0), rankSize(i)*DIM, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
+    }
+  }
+  //processus ouvrier
+  else
+  {
+    int borderSize = DIM/size;
+    if(rank%2==0)
+    {
+      //processus pair --> send ; compute? ; receive
+      int upperZone[DIM];
+      int lowerZone[DIM];
+
+      MPI_Send(&table(in, 0, rankTop(rank)), sizeof(int)*DIM, MPI_INT, rank-1, 0, MPI_COMM_WORLD);
+      if(rank!=size-1)
+        MPI_Send(&table(in, 0, rankDown(rank)), sizeof(int)*DIM, MPI_INT, rank+1, 0, MPI_COMM_WORLD);
+
+      //compute ?
+
+      if(rank!=size-1)
+        MPI_Recv(&lowerZone, sizeof(int)*DIM, MPI_INT, rank+1, 0, MPI_COMM_WORLD, &status);
+      MPI_Recv(&upperZone, sizeof(int)*DIM, MPI_INT, rank-1, 0, MPI_COMM_WORLD, &status);
+    }
+    else
+    {
+      //processus impair --> receive ; compute? ; send
+      int upperZone[DIM];
+      int lowerZone[DIM];
+
+      if(rank!=size-1)
+        MPI_Recv(&lowerZone, sizeof(int)*DIM, MPI_INT, rank+1, 0, MPI_COMM_WORLD, &status);
+      if(rank!=1)
+        MPI_Recv(&upperZone, sizeof(int)*DIM, MPI_INT, rank+1, 0, MPI_COMM_WORLD, &status);
+
+      //compute ?
+
+      if(rank!=1)
+        MPI_Send(&table(in, 0, rankTop(rank)), sizeof(int)*DIM, MPI_INT, rank-1, 0, MPI_COMM_WORLD);
+      if(rank!=size-1)
+        MPI_Send(&table(in, 0, rankDown(rank)), sizeof(int)*DIM, MPI_INT, rank+1, 0, MPI_COMM_WORLD);
+    }
+    MPI_Send(&table(in, 0, rankTop(rank)), rankSize(rank), MPI_INT, 0, 0, MPI_COMM_WORLD);
+  }
+}
+
+int ssandPile_do_tile_mpi(int x, int y, int width, int height)
+{
+  //same as refresh_img_mpi ????
+}
+
+unsigned ssandPile_compute_mpi(unsigned nb_iter)
+{
+    for (unsigned it = 1; it <= nb_iter; it++)
+    {
+      do_tile(0, rankTop(rank), DIM, rankSize(rank), 0);
+      //zoom();
+    }
+    return 0;
+}
+#endif

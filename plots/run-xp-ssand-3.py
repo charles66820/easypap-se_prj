@@ -3,7 +3,7 @@ from expTools import *
 
 easypapOptions = {
     "-k ": ["ssandPile"],
-    "-i ": [100],
+    "-i ": [1000],
     "-s ": [512],
 		"-wt ": ["opt", "avx"],
     "-th ": [1, 32, 64],
@@ -27,13 +27,13 @@ execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")
 
 easypapOptions = {
     "-k ": ["ssandPile"],
-    "-i ": [4000],
+    "-i ": [69191],
     "-s ": [512],
 		"-th ": [2 ** i for i in range(0, 10)],
     "-tw ": [2 ** i for i in range(0, 10)],
 		"-o ": ["-o "]
 }
-easypapOptions["-of "] = ["xp/ssand-xp-ocl-pef.csv"]
+easypapOptions["-of "] = ["xp/ssand-xp-ocl-perf.csv"]
 
 # Lancement des experiences
 execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")

@@ -534,6 +534,12 @@ unsigned ssandPile_compute_omp_lazy(unsigned nb_iter)
 
 #include <immintrin.h>
 
+void ssandPile_tile_check_avx (void)
+{
+  // Tile width must be larger than AVX vector size
+  easypap_vec_check (AVX_VEC_SIZE_INT, DIR_HORIZONTAL);
+}
+
 int ssandPile_do_tile_avx(int x, int y, int width, int height)
 {
   const __m256 vec4    = _mm256_set1_ps(4);
@@ -542,7 +548,8 @@ int ssandPile_do_tile_avx(int x, int y, int width, int height)
   // Outer tiles are computed the usual way
   // if (x == 1 || x == (DIM - 1) - width || y == 1 || y == (DIM - 1) - height)
   if (x == (DIM - 1) - width)
-    return ssandPile_do_tile_opt(x, y, width, height);
+    x -= 1;
+    // return ssandPile_do_tile_opt(x, y, width, height);
 
   // Inner tiles involve no border test
   int diff = 0;

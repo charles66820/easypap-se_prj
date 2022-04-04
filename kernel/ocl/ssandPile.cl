@@ -6,7 +6,21 @@ __kernel void ssandPile_ocl (__global unsigned *in, __global unsigned *out)
   int x = get_global_id (0);
   int y = get_global_id (1);
 
-  //TODO
+  //traitement
+  int posX = x;//-xloc;
+  int posY = y;//-yloc;
+
+  int myPos = posY*DIM+posX;
+  
+  if(!(x==0 || y==0 || x==DIM-1 || y==DIM-1))
+  {
+    unsigned result = in[myPos]%4;
+    result += in[myPos+DIM]/4;
+    result += in[myPos-DIM]/4;
+    result += in[myPos+1]/4;
+    result += in[myPos-1]/4;
+    out [myPos] = result;
+  }
 }
 
 

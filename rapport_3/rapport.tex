@@ -33,18 +33,27 @@
 
 \subsection{4.5.1 The synchronous case}
 
+On fait le speedup avec \emph{omp\_tile} entre les tailing \emph{opt} et \emph{avx} sur la machine
+\emph{UHURA} on obtien 4483 pour opt et 4764 pour avx un speedup de 0.94 = $\frac{4483}{4764}$.
+
+
 \subsection{4.5.2 The asynchronous case}
 
-\section{4.6 MPI Implementation}
+On a implémenter en suivant la consigne su sujet mais on n'a par réussi a avoir autre chose qu'un
+fond noire.
+
+Le code de la fonction :
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    linenos
+]{c}{codes/ssand_do_tile_avx.c}
 
 \section{4.7 OpenCL Implementation}
 
 \subsection{4.7.1 Basic OpenCL Implementation}
 
-\subsection{4.7.2 Generating dumps}
-
-\subsection{4.7.3 Detecting termination}
-
-\subsection{4.7.4 OpenCL + OpenMP Implementation}
 
 \end{document}

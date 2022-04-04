@@ -1127,6 +1127,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
 #if __AVX2__ == 1
 
 #include <immintrin.h>
+
 int asandPile_do_tile_avx(int x, int y, int width, int height)
 {
   // $$\overrightarrow{X} == vecX$$

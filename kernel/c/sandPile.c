@@ -1124,7 +1124,7 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
 // Intrinsics functions
 #ifdef ENABLE_VECTO
 
-#if __AVX2__ == 1
+#if __AVX2__ == 1 && __AVX512F__ == 1
 
 #include <immintrin.h>
 

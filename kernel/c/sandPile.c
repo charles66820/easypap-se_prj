@@ -1153,7 +1153,19 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
       __m256i vecDShiftLeft = _mm256_alignr_epi32(vecD, vec0_i, 2);
 
       // (vecD >> 1)
+      {
+        int *ptr = (int*)&vec0_i;
+        printf("%d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+      {
+        int *ptr = (int*)&vecD;
+        printf("%d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
       __m256i vecDShiftRight = _mm256_alignr_epi32(vec0_i, vecD, 1);
+      {
+        int *ptr = (int*)&vecDShiftRight;
+        printf("%d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
 
       // vec_i <-- vec_i % 4 + vecDShiftLeft + vecDShiftRight
       vec_i = _mm256_add_epi32(_mm256_and_si256(vec_i, vec3_i),

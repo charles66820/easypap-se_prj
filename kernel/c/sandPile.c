@@ -542,14 +542,13 @@ void ssandPile_tile_check_avx (void)
 
 int ssandPile_do_tile_avx(int x, int y, int width, int height)
 {
-  const __m256 vec4    = _mm256_set1_ps(4);
   const __m256i vec3_i = _mm256_set1_epi32(3);
 
   // Outer tiles are computed the usual way
   // if (x == 1 || x == (DIM - 1) - width || y == 1 || y == (DIM - 1) - height)
+  //   return ssandPile_do_tile_opt(x, y, width, height);
   if (x == (DIM - 1) - width)
     x -= 1;
-    // return ssandPile_do_tile_opt(x, y, width, height);
 
   // Inner tiles involve no border test
   int diff = 0;
@@ -557,42 +556,40 @@ int ssandPile_do_tile_avx(int x, int y, int width, int height)
   for (int i = y; i < y + height; i++)
     for (int j = x; j < x + width; j += AVX_VEC_SIZE_INT)
     {
-      __m256 result;
-      __m256 tmp;
+      __m256i result_i;
+      __m256i tmp;
 
       // load table(in, i, j)
       __m256i currentPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i, j));
       // load table(in, i + 1, j)
-      __m256 topPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i + 1, j)));
+      __m256i bottomPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i + 1, j));
       // load table(in, i - 1, j)
-      __m256 bottomPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i - 1, j)));
+      __m256i topPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i - 1, j));
       // load table(in, i, j + 1)
-      __m256 rightPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i, j + 1)));
+      __m256i rightPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i, j + 1));
       // load table(in, i, j - 1)
-      __m256 leftPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i, j - 1)));
+      __m256i leftPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i, j - 1));
 
       // result = currentPixelsRow % 4;
-      __m256i res = _mm256_and_si256(currentPixelsRow_i, vec3_i); // currentPixelsRow & (4 - 1)
-      result      = _mm256_cvtepi32_ps(res);
+      result_i = _mm256_and_si256(currentPixelsRow_i, vec3_i); // currentPixelsRow & (4 - 1)
 
       // result += topPixelsRow / 4;
-      tmp    = _mm256_floor_ps(_mm256_div_ps(topPixelsRow, vec4));
-      result = _mm256_add_ps(result, tmp);
+      tmp = _mm256_srli_epi32(topPixelsRow_i, 2);
+      result_i = _mm256_add_epi32(result_i, tmp);
 
       // result += bottomPixelsRow / 4;
-      tmp    = _mm256_floor_ps(_mm256_div_ps(bottomPixelsRow, vec4));
-      result = _mm256_add_ps(result, tmp);
+      tmp = _mm256_srli_epi32(bottomPixelsRow_i, 2);
+      result_i = _mm256_add_epi32(result_i, tmp);
 
       // result += rightPixelsRow / 4;
-      tmp    = _mm256_floor_ps(_mm256_div_ps(rightPixelsRow, vec4));
-      result = _mm256_add_ps(result, tmp);
+      tmp = _mm256_srli_epi32(rightPixelsRow_i, 2);
+      result_i = _mm256_add_epi32(result_i, tmp);
 
       // result += leftPixelsRow / 4;
-      tmp    = _mm256_floor_ps(_mm256_div_ps(leftPixelsRow, vec4));
-      result = _mm256_add_ps(result, tmp);
+      tmp = _mm256_srli_epi32(leftPixelsRow_i, 2);
+      result_i = _mm256_add_epi32(result_i, tmp);
 
       // table(out, i, j) = result;
-      __m256i result_i = _mm256_cvtps_epi32(result); // m256 => m256i : i for integer
       _mm256_storeu_si256((__m256i *) &table(out, i, j), result_i);
 
       // diff |= result != currentPixelsRow;

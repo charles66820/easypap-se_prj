@@ -1150,7 +1150,7 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
       __m256i vecD = _mm256_srli_epi32(vec_i, 3);
 
       // (vecD << 1)
-      __m256i vecDShiftLeft = _mm256_alignr_epi32(vecD, vec0_i, -1);
+      __m256i vecDShiftLeft = _mm256_alignr_epi32(vecD, vec0_i, 7);
 
       // (vecD >> 1)
       __m256i vecDShiftRight = _mm256_alignr_epi32(vec0_i, vecD, 1);

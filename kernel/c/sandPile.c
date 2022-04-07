@@ -1134,7 +1134,7 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
   // return asandPile_do_tile_opt(x, y, width, height);
   const __m256i vec3_i = _mm256_set1_epi32(3);
   const __m256i vec0_i = _mm256_set1_epi32(0);
-  bool debug = true;
+
   int diff = 0;
   for (int j = y; j < y + height; j++)
     for (int i = x; i < x + width; i += AVX_VEC_SIZE_INT)
@@ -1147,26 +1147,13 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
       __m256i bottomVec_i = _mm256_loadu_si256((__m256i *) &table(in, j + 1, i));
 
       // vecD <-- vec_i / 4
-      if (debug) {
-        int *ptr = (int*)&vec_i;
-        printf("%d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
-      }
-      __m256i vecD = _mm256_srli_epi32(vec_i, 3);
-      if (debug) {
-        int *ptr = (int*)&vecD;
-        printf("%d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
-      }
+      __m256i vecD = _mm256_srli_epi32(vec_i, 2);
 
       // (vecD << 1)
       __m256i vecDShiftLeft = _mm256_alignr_epi32(vecD, vec0_i, 7);
 
       // (vecD >> 1)
       __m256i vecDShiftRight = _mm256_alignr_epi32(vec0_i, vecD, 1);
-      // if (debug) {
-      //   int *ptr = (int*)&vecDShiftRight;
-      //   printf("%d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
-      // }
-      debug = false;
 
       // vec_i <-- vec_i % 4 + vecDShiftLeft + vecDShiftRight
       vec_i = _mm256_add_epi32(_mm256_and_si256(vec_i, vec3_i),

@@ -1183,8 +1183,8 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
       _mm256_storeu_si256((__m256i *) &table(out, j + 1, i), bottomVec_i);
 
 
-      __m256i mask = _mm256_xor_si256(result_i, currentPixelsRow_i);
-      if (_mm256_testz_si256(mask, mask) != 1)
+      // __m256i mask = _mm256_xor_si256(result_i, currentPixelsRow_i);
+      // if (_mm256_testz_si256(mask, mask) != 1)
         diff = 1;
     }
 

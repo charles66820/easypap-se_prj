@@ -1125,8 +1125,14 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
 
 #include <immintrin.h>
 
+#define DEBUG 0
+
 int asandPile_do_tile_avx(int x, int y, int width, int height)
 {
+#if DEBUG == 1
+  bool debug = true;
+  if (debug) printf("\n");
+#endif
   if (x == (DIM - 1) - width)
     x -= 1;
 
@@ -1145,36 +1151,105 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
       __m256i vec_i = _mm256_loadu_si256((__m256i *) &table(in, j, i)); // load?
       // vecT_{j+1,i} <-- (t_{j+1,i+k}, ..., t_{j+1,i})
       __m256i bottomVec_i = _mm256_loadu_si256((__m256i *) &table(in, j + 1, i));
-
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&topVec_i;
+        printf("top %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+      if (  debug) {
+        int *ptr = (int*)&vec_i;
+        printf("cur %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+      if (debug) {
+        int *ptr = (int*)&bottomVec_i;
+        printf("bot %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       // vecD <-- vec_i / 4
       __m256i vecD = _mm256_srli_epi32(vec_i, 2);
-
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&vecD;
+        printf("\nvecD %d %d %d %d %d %d %d %d    ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       // (vecD << 1)
-      __m256i vecDShiftLeft = _mm256_alignr_epi32(vecD, vec0_i, 7);
-
+      __m256i vecDShiftLeft = _mm256_alignr_epi32(vec0_i, vecD, 1);
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&vecDShiftLeft;
+        printf("vecD SL %d %d %d %d %d %d %d %d    ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       // (vecD >> 1)
-      __m256i vecDShiftRight = _mm256_alignr_epi32(vec0_i, vecD, 1);
-
+      __m256i vecDShiftRight = _mm256_alignr_epi32(vecD, vec0_i, 7);
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&vecDShiftRight;
+        printf("vecD SR %d %d %d %d %d %d %d %d    ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       // vec_i <-- vec_i % 4 + vecDShiftLeft + vecDShiftRight
       __m256i res_vec_i = _mm256_add_epi32(_mm256_and_si256(vec_i, vec3_i),
                                _mm256_add_epi32(vecDShiftLeft, vecDShiftRight));
-
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&res_vec_i;
+        printf("res_rec_i %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       // topVec_i <-- topVec_i + vecD
       topVec_i = _mm256_add_epi32(topVec_i, vecD);
-
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&topVec_i;
+        printf("new top %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       // bottomVec_i <-- bottomVec_i + vecD
       bottomVec_i = _mm256_add_epi32(bottomVec_i, vecD);
-
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&bottomVec_i;
+        printf("new bot %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       // t_{j,i-1} <-- t_{j,i-1} + vecD[0]
       __m256i leftVec_i = _mm256_loadu_si256((__m256i *) &table(in, j, i - 1));
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&leftVec_i;
+        printf("leftVec %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       leftVec_i         = _mm256_add_epi32(leftVec_i, vecD);
-      _mm256_storeu_si256((__m256i *) &table(in, j, i - 1), leftVec_i);
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&leftVec_i;
+        printf("new leftVec %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
+      _mm256_storeu_si256((__m256i *) &table(out, j, i - 1), leftVec_i);
 
       // t_{j,i+k+1} <-- t_{j,i+k+1} + vecD[k]  :  k = AVX_VEC_SIZE_INT-1
       __m256i rightVec_i = _mm256_loadu_si256((__m256i *) &table(in, j, i + 1));
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&rightVec_i;
+        printf("rightVec %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
       rightVec_i         = _mm256_add_epi32(rightVec_i, vecD);
-      _mm256_storeu_si256((__m256i *) &table(in, j, i + 1), rightVec_i);
-
+#if DEBUG == 1
+      if (debug) {
+        int *ptr = (int*)&rightVec_i;
+        printf("new rightVec %d %d %d %d %d %d %d %d\n", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7]);
+      }
+#endif
+      _mm256_storeu_si256((__m256i *) &table(out, j, i + 1), rightVec_i);
+#if DEBUG == 1
+      debug = false;
+#endif
       // (t_{j-1,i+k}, ..., t_{j-1,i}) <-- vecT_{j-1,i}
       _mm256_storeu_si256((__m256i *) &table(out, j - 1, i), topVec_i);
       // (t_{j,i+k}, ..., t_{j,i}) <-- vecT_{j,i}

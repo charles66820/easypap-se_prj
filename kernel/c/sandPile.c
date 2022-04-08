@@ -1137,7 +1137,6 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
     x -= 1;
 
   // $$\overrightarrow{X} == vecX$$
-  // return asandPile_do_tile_opt(x, y, width, height);
   const __m256i vec3_i = _mm256_set1_epi32(3);
   const __m256i vec0_i = _mm256_set1_epi32(0);
 

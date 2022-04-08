@@ -1127,6 +1127,9 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
 
 int asandPile_do_tile_avx(int x, int y, int width, int height)
 {
+  if (x == (DIM - 1) - width)
+    x -= 1;
+
   // $$\overrightarrow{X} == vecX$$
   // return asandPile_do_tile_opt(x, y, width, height);
   const __m256i vec3_i = _mm256_set1_epi32(3);
@@ -1153,7 +1156,7 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
       __m256i vecDShiftRight = _mm256_alignr_epi32(vec0_i, vecD, 1);
 
       // vec_i <-- vec_i % 4 + vecDShiftLeft + vecDShiftRight
-      vec_i = _mm256_add_epi32(_mm256_and_si256(vec_i, vec3_i),
+      __m256i res_vec_i = _mm256_add_epi32(_mm256_and_si256(vec_i, vec3_i),
                                _mm256_add_epi32(vecDShiftLeft, vecDShiftRight));
 
       // topVec_i <-- topVec_i + vecD
@@ -1175,13 +1178,13 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
       // (t_{j-1,i+k}, ..., t_{j-1,i}) <-- vecT_{j-1,i}
       _mm256_storeu_si256((__m256i *) &table(out, j - 1, i), topVec_i);
       // (t_{j,i+k}, ..., t_{j,i}) <-- vecT_{j,i}
-      _mm256_storeu_si256((__m256i *) &table(out, j, i), vec_i);
+      _mm256_storeu_si256((__m256i *) &table(out, j, i), res_vec_i);
       // (t_{j+1,i+k}, ..., t_{j+1,i}) <-- vecT_{j+1,i}
       _mm256_storeu_si256((__m256i *) &table(out, j + 1, i), bottomVec_i);
 
 
-      // __m256i mask = _mm256_xor_si256(result_i, currentPixelsRow_i);
-      // if (_mm256_testz_si256(mask, mask) != 1)
+      __m256i mask = _mm256_xor_si256(res_vec_i, vec_i);
+      if (_mm256_testz_si256(mask, mask) != 1)
         diff = 1;
     }
 

@@ -25,18 +25,18 @@ easypapOptions["-of "] = ["xp/ssand-xp-avx.csv"]
 execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")
 
 
-easypapOptions = {
-    "-k ": ["ssandPile"],
-    "-i ": [69191],
-    "-s ": [512],
-		"-th ": [2 ** i for i in range(0, 10)],
-    "-tw ": [2 ** i for i in range(0, 10)],
-		"-o ": ["-o "]
-}
-easypapOptions["-of "] = ["xp/ssand-xp-ocl-perf.csv"]
+#easypapOptions = {
+    #"-k ": ["ssandPile"],
+    #"-i ": [69191],
+    #"-s ": [512],
+		#"-th ": [2 ** i for i in range(0, 10)],
+    #"-tw ": [2 ** i for i in range(0, 10)],
+		#"-o ": ["-o "]
+#}
+#easypapOptions["-of "] = ["xp/ssand-xp-ocl-perf.csv"]
 
 # Lancement des experiences
-execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")
+#execute('./run ', ompICV, easypapOptions, nbrun, verbose=False, easyPath=".")
 
 
 # easypapOptions["-v "] = ["omp_tiled", "omp_lazy"]

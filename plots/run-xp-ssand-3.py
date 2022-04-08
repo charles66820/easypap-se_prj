@@ -18,7 +18,7 @@ ompICV = {
 nbrun = 3
 
 
-easypapOptions["-v "] = ["omp_tiled", "omp_lazy"]
+easypapOptions["-v "] = ["omp_tiled"]
 easypapOptions["-of "] = ["xp/ssand-xp-avx.csv"]
 
 # Lancement des experiences

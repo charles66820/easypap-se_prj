@@ -34,7 +34,7 @@
 \subsection{4.5.1 The synchronous case}
 
 On fait le speedup avec \emph{omp\_tile} entre les tailing \emph{opt} et \emph{avx} sur la machine
-\emph{UHURA} on obtient 4483 pour opt et 4764 pour avx un speedup de $1.15 =\frac{15236.266}{13207.626}$
+\emph{Uhura} on obtient 4483 pour opt et 4764 pour avx un speedup de $1.15 =\frac{15236.266}{13207.626}$
 sur une éxécution avec tw=64, th=512, 1 thread et une taille de 512.
 Il n'y a pas une grande différence entre les 2 version car gcc a une très bonne vectorization.
 
@@ -47,6 +47,11 @@ Il n'y a pas une grande différence entre les 2 version car gcc a une très bonn
 On voit que le speed-up de l'avx est supérieur à la version opt, et avec des marges d'erreurs
 moins conséquentes.
 (Ayant du mal avec les fichiers d'expériences, on ne sait pas sur quoi il se base pour les speed-up)
+
+On fait le speedup avec \emph{omp\_lazy} entre les tailing \emph{opt} et \emph{avx} sur la machine
+\emph{troi} on obtient 4483 pour opt et 4764 pour avx un speedup de $1.24 =\frac{6464.618}{5189.285}$
+sur une éxécution avec tw=64, th=512, 1 thread et une taille de 512.
+Il n'y a pas une grande différence entre les 2 version car gcc a une très bonne vectorization.
 
 \subsection{4.5.2 The asynchronous case}
 

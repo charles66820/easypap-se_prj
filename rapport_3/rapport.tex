@@ -38,6 +38,16 @@ On fait le speedup avec \emph{omp\_tile} entre les tailing \emph{opt} et \emph{a
 sur une éxécution avec tw=64, th=512, 1 thread et une taille de 512.
 Il n'y a pas une grande différence entre les 2 version car gcc a une très bonne vectorization.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\linewidth]{ssand-xp-avx.pdf}
+  \caption{\small{ssandPile comparaison avx et opt sur certaines tailles de tuiles}}
+\end{figure}
+
+On voit que le speed-up de l'avx est supérieur à la version opt, et avec des marges d'erreurs
+moins conséquentes.
+(Ayant du mal avec les fichiers d'expériences, on ne sait pas sur quoi il se base pour les speed-up)
+
 \subsection{4.5.2 The asynchronous case}
 
 On a implémenter en suivant la consigne sur sujet.

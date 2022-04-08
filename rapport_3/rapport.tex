@@ -35,7 +35,7 @@
 
 On fait le speedup avec \emph{omp\_tile} entre les tailing \emph{opt} et \emph{avx} sur la machine
 \emph{UHURA} on obtient 4483 pour opt et 4764 pour avx un speedup de $1.15 =\frac{15236.266}{13207.626}$
-sur une éxécution optimale (tw=64, th=512) et une taille de 512.
+sur une éxécution avec tw=64, th=512, 1 thread et une taille de 512.
 Il n'y a pas une grande différence entre les 2 version car gcc a une très bonne vectorization.
 
 \subsection{4.5.2 The asynchronous case}

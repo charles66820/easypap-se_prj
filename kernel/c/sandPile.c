@@ -542,14 +542,13 @@ void ssandPile_tile_check_avx (void)
 
 int ssandPile_do_tile_avx(int x, int y, int width, int height)
 {
-  const __m256 vec4    = _mm256_set1_ps(4);
   const __m256i vec3_i = _mm256_set1_epi32(3);
 
   // Outer tiles are computed the usual way
   // if (x == 1 || x == (DIM - 1) - width || y == 1 || y == (DIM - 1) - height)
+  //   return ssandPile_do_tile_opt(x, y, width, height);
   if (x == (DIM - 1) - width)
     x -= 1;
-    // return ssandPile_do_tile_opt(x, y, width, height);
 
   // Inner tiles involve no border test
   int diff = 0;
@@ -557,42 +556,40 @@ int ssandPile_do_tile_avx(int x, int y, int width, int height)
   for (int i = y; i < y + height; i++)
     for (int j = x; j < x + width; j += AVX_VEC_SIZE_INT)
     {
-      __m256 result;
-      __m256 tmp;
+      __m256i result_i;
+      __m256i tmp;
 
       // load table(in, i, j)
       __m256i currentPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i, j));
       // load table(in, i + 1, j)
-      __m256 topPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i + 1, j)));
+      __m256i bottomPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i + 1, j));
       // load table(in, i - 1, j)
-      __m256 bottomPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i - 1, j)));
+      __m256i topPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i - 1, j));
       // load table(in, i, j + 1)
-      __m256 rightPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i, j + 1)));
+      __m256i rightPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i, j + 1));
       // load table(in, i, j - 1)
-      __m256 leftPixelsRow = _mm256_cvtepi32_ps(_mm256_loadu_si256((__m256i *) &table(in, i, j - 1)));
+      __m256i leftPixelsRow_i = _mm256_loadu_si256((__m256i *) &table(in, i, j - 1));
 
       // result = currentPixelsRow % 4;
-      __m256i res = _mm256_and_si256(currentPixelsRow_i, vec3_i); // currentPixelsRow & (4 - 1)
-      result      = _mm256_cvtepi32_ps(res);
+      result_i = _mm256_and_si256(currentPixelsRow_i, vec3_i); // currentPixelsRow & (4 - 1)
 
       // result += topPixelsRow / 4;
-      tmp    = _mm256_floor_ps(_mm256_div_ps(topPixelsRow, vec4));
-      result = _mm256_add_ps(result, tmp);
+      tmp = _mm256_srli_epi32(topPixelsRow_i, 2);
+      result_i = _mm256_add_epi32(result_i, tmp);
 
       // result += bottomPixelsRow / 4;
-      tmp    = _mm256_floor_ps(_mm256_div_ps(bottomPixelsRow, vec4));
-      result = _mm256_add_ps(result, tmp);
+      tmp = _mm256_srli_epi32(bottomPixelsRow_i, 2);
+      result_i = _mm256_add_epi32(result_i, tmp);
 
       // result += rightPixelsRow / 4;
-      tmp    = _mm256_floor_ps(_mm256_div_ps(rightPixelsRow, vec4));
-      result = _mm256_add_ps(result, tmp);
+      tmp = _mm256_srli_epi32(rightPixelsRow_i, 2);
+      result_i = _mm256_add_epi32(result_i, tmp);
 
       // result += leftPixelsRow / 4;
-      tmp    = _mm256_floor_ps(_mm256_div_ps(leftPixelsRow, vec4));
-      result = _mm256_add_ps(result, tmp);
+      tmp = _mm256_srli_epi32(leftPixelsRow_i, 2);
+      result_i = _mm256_add_epi32(result_i, tmp);
 
       // table(out, i, j) = result;
-      __m256i result_i = _mm256_cvtps_epi32(result); // m256 => m256i : i for integer
       _mm256_storeu_si256((__m256i *) &table(out, i, j), result_i);
 
       // diff |= result != currentPixelsRow;
@@ -1120,11 +1117,11 @@ unsigned asandPile_compute_omp_lazy(unsigned nb_iter)
 
 #pragma endregion asandLazy
 
-#pragma region ssandAVX
+#pragma region asandAVX
 // Intrinsics functions
 #ifdef ENABLE_VECTO
 
-#if __AVX2__ == 1
+#if __AVX2__ == 1 && __AVX512F__ == 1
 
 #include <immintrin.h>
 
@@ -1133,6 +1130,7 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
   // $$\overrightarrow{X} == vecX$$
   // return asandPile_do_tile_opt(x, y, width, height);
   const __m256i vec3_i = _mm256_set1_epi32(3);
+  const __m256i vec0_i = _mm256_set1_epi32(0);
 
   int diff = 0;
   for (int j = y; j < y + height; j++)
@@ -1141,16 +1139,22 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
       // vecT_{j-1,i} <-- (t_{j-1,i+k}, ..., t_{j-1,i})
       __m256i topVec_i = _mm256_loadu_si256((__m256i *) &table(in, j - 1, i));
       // vecT_{j,i} <-- (t_{j,i+k}, ..., t_{j,i})
-      __m256i vec_i = _mm256_loadu_si256((__m256i *) &table(in, j, i));
+      __m256i vec_i = _mm256_loadu_si256((__m256i *) &table(in, j, i)); // load?
       // vecT_{j+1,i} <-- (t_{j+1,i+k}, ..., t_{j+1,i})
       __m256i bottomVec_i = _mm256_loadu_si256((__m256i *) &table(in, j + 1, i));
 
       // vecD <-- vec_i / 4
-      __m256i vecD = _mm256_srli_epi32(vec_i, 3);
+      __m256i vecD = _mm256_srli_epi32(vec_i, 2);
 
-      // vec_i <-- vec_i % 4 + (vecD << 1) + (vecD >> 1)
+      // (vecD << 1)
+      __m256i vecDShiftLeft = _mm256_alignr_epi32(vecD, vec0_i, 7);
+
+      // (vecD >> 1)
+      __m256i vecDShiftRight = _mm256_alignr_epi32(vec0_i, vecD, 1);
+
+      // vec_i <-- vec_i % 4 + vecDShiftLeft + vecDShiftRight
       vec_i = _mm256_add_epi32(_mm256_and_si256(vec_i, vec3_i),
-                               _mm256_add_epi32(_mm256_slli_epi32(vecD, 1), _mm256_srli_epi32(vecD, 1)));
+                               _mm256_add_epi32(vecDShiftLeft, vecDShiftRight));
 
       // topVec_i <-- topVec_i + vecD
       topVec_i = _mm256_add_epi32(topVec_i, vecD);
@@ -1186,7 +1190,7 @@ int asandPile_do_tile_avx(int x, int y, int width, int height)
 
 #endif
 #endif
-#pragma endregion ssandAVX
+#pragma endregion asandAVX
 
 #pragma endregion asynchronousKernel
 

@@ -547,6 +547,8 @@ int ssandPile_do_tile_avx(int x, int y, int width, int height)
   // Outer tiles are computed the usual way
   // if (x == 1 || x == (DIM - 1) - width || y == 1 || y == (DIM - 1) - height)
   //   return ssandPile_do_tile_opt(x, y, width, height);
+  if (y == 1 || y == (DIM - 1) - height)
+    return ssandPile_do_tile_opt(x, y, width, height);
   if (x == (DIM - 1) - width)
     x -= 1;
 

@@ -624,6 +624,87 @@ void ssandPile_refresh_img_ocl()
   ssandPile_refresh_img();
 }
 
+
+void ssandPile_refresh_img_ocl_term()
+{
+  ssandPile_refresh_img_ocl();
+}
+
+static cl_mem term_buffer;
+void ssandPile_init_ocl_term(void)
+{
+  ssandPile_init();
+
+  const int size = DIM * DIM * sizeof(TYPE);
+
+  term_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, NULL);
+  if (!term_buffer)
+    exit_with_error ("Failed to allocate termination buffer");
+}
+
+static uint countIter = 0;
+static uint checkTermIterm = 1;
+unsigned ssandPile_invoke_ocl_term(unsigned nb_iter)
+{
+  TYPE * tmpTab = calloc(DIM * DIM, sizeof(TYPE));
+  uint ret = 0;
+
+  size_t global[2] = {GPU_SIZE_X, GPU_SIZE_Y}; // global domain size for our calculation
+  size_t local[2]  = {GPU_TILE_W, GPU_TILE_H}; // local domain size for our calculation
+  cl_int err;
+
+  monitoring_start_tile(easypap_gpu_lane(TASK_TYPE_COMPUTE));
+
+  for (unsigned it = 1; it <= nb_iter; it++) {
+
+    // Set kernel arguments
+    //
+    err = 0;
+    err |= clSetKernelArg(compute_kernel, 0, sizeof(cl_mem), &cur_buffer);
+    err |= clSetKernelArg(compute_kernel, 1, sizeof(cl_mem), &next_buffer);
+    err |= clSetKernelArg(compute_kernel, 2, sizeof(cl_mem), &term_buffer);
+    check(err, "Failed to set kernel arguments");
+
+    err = clEnqueueNDRangeKernel(queue, compute_kernel, 2, NULL, global, local,
+                                  0, NULL, NULL);
+    check(err, "Failed to execute kernel");
+
+
+    // Swap buffers
+    {
+      cl_mem tmp  = cur_buffer;
+      cur_buffer  = next_buffer;
+      next_buffer = tmp;
+    }
+
+    if (countIter > checkTermIterm) {
+      err = clEnqueueReadBuffer(queue, term_buffer, CL_TRUE, 0, DIM * DIM * sizeof(TYPE), tmpTab, 0, NULL, NULL);
+      check(err, "Failed to read buffer from GPU");
+
+      bool notChange = true;
+      for (size_t i = 0; i < DIM * DIM; i++)
+        if (tmpTab[i] != 0) {
+          notChange = false;
+          break;
+        }
+
+      if (notChange) {
+        ret = 1;
+        break;
+      }
+      countIter = 1;
+    } else countIter++;
+  }
+
+  clFinish(queue);
+
+  free(tmpTab);
+
+  monitoring_end_tile(0, 0, DIM, DIM, easypap_gpu_lane(TASK_TYPE_COMPUTE));
+
+  return ret;
+}
+
 #pragma endregion ssandOpenCL
 
 #pragma endregion synchronousKernel

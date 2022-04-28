@@ -731,6 +731,10 @@ void ssandPile_init_ocl_omp(void)
   if (!term_buffer)
     exit_with_error ("Failed to allocate termination buffer");
 
+  if (GPU_TILE_H != TILE_H)
+    exit_with_error ("CPU and GPU Tiles should have the same height (%d != %d)",
+                     GPU_TILE_H, TILE_H);
+
   cpu_y_part = (NB_TILES_Y / 2) * GPU_TILE_H; // Start with fifty-fifty
   gpu_y_part = DIM - cpu_y_part;
 }
@@ -744,12 +748,16 @@ static int much_greater_than (long t1, long t2)
 
 // static uint countIter = 0;
 // static uint checkTermIterm = 1;
+
+// Suggested cmdline:
+// ./run -k ssandPile -o -v ocl_omp -m -ts 16
+//
 unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
 {
   TYPE * tmpTab = calloc(DIM * DIM, sizeof(TYPE));
   uint ret = 0;
 
-  size_t global[2] = {GPU_SIZE_X, GPU_SIZE_Y}; // global domain size for our calculation
+  size_t global[2] = {GPU_SIZE_X, gpu_y_part}; // global domain size for our calculation
   size_t local[2]  = {GPU_TILE_W, GPU_TILE_H}; // local domain size for our calculation
   cl_int err;
 
@@ -801,16 +809,15 @@ unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
                           TILE_W - ((x + TILE_W == DIM) + (x == 0)),
                           TILE_H - ((y + TILE_H == DIM) + (y == 0)),
                           omp_get_thread_num());
-      ret = change;
+      ret = !change;
     }
-    // FIXME:
+
     t2           = what_time_is_it ();
     cpu_duration = t2 - t1;
 
     clFinish(queue);
 
     // Monitor
-    // FIXME:
     gpu_duration = ocl_monitor(kernel_event, 0, cpu_y_part, global[0],
                                 global[1], TASK_TYPE_COMPUTE);
     clReleaseEvent(kernel_event);

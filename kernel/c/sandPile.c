@@ -830,6 +830,7 @@ unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
       cur_buffer  = next_buffer;
       next_buffer = tmp;
     }
+    swap_tables();
 
     // termination
     if (countIter > checkTermIterm)

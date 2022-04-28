@@ -22,10 +22,10 @@ __kernel void ssandPile_ocl(__global unsigned *in, __global unsigned *out)
   }
 }
 
-__kernel void ssandPile_ocl_term(__global unsigned *in, __global unsigned *out, __global unsigned *buffer)
+static void ssandPile(__global unsigned *in, __global unsigned *out, __global unsigned *buffer, unsigned offset)
 {
   int x = get_global_id(0);
-  int y = get_global_id(1);
+  int y = get_global_id(1) + offset;
 
 
   int myPos = y * DIM + x;
@@ -40,6 +40,16 @@ __kernel void ssandPile_ocl_term(__global unsigned *in, __global unsigned *out, 
     out[myPos] = result;
     buffer[myPos] = result != in[myPos];
   }
+}
+
+__kernel void ssandPile_ocl_term(__global unsigned *in, __global unsigned *out, __global unsigned *buffer)
+{
+  ssandPile(in, out, buffer, 0);
+}
+
+__kernel void ssandPile_ocl_omp(__global unsigned *in, __global unsigned *out, __global unsigned *buffer, unsigned offset)
+{
+  ssandPile(in, out, buffer, offset);
 }
 
 // DO NOT MODIFY: this kernel updates the OpenGL texture buffer

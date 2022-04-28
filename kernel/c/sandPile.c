@@ -707,6 +707,165 @@ unsigned ssandPile_invoke_ocl_term(unsigned nb_iter)
 
 #pragma endregion ssandOpenCL
 
+
+#pragma region ssandOpenCLOpenMp
+void ssandPile_refresh_img_ocl_omp()
+{
+  ssandPile_refresh_img_ocl();
+}
+
+// Threashold = 10%
+#define THRESHOLD 10
+
+static unsigned cpu_y_part;
+static unsigned gpu_y_part;
+
+// static cl_mem term_buffer;
+void ssandPile_init_ocl_omp(void)
+{
+  ssandPile_init();
+
+  const int size = DIM * DIM * sizeof(TYPE);
+
+  term_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, NULL);
+  if (!term_buffer)
+    exit_with_error ("Failed to allocate termination buffer");
+
+  cpu_y_part = (NB_TILES_Y / 2) * GPU_TILE_H; // Start with fifty-fifty
+  gpu_y_part = DIM - cpu_y_part;
+}
+
+static long gpu_duration = 0, cpu_duration = 0;
+
+static int much_greater_than (long t1, long t2)
+{
+  return (t1 > t2) && ((t1 - t2) * 100 / t1 > THRESHOLD);
+}
+
+// static uint countIter = 0;
+// static uint checkTermIterm = 1;
+unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
+{
+  TYPE * tmpTab = calloc(DIM * DIM, sizeof(TYPE));
+  uint ret = 0;
+
+  size_t global[2] = {GPU_SIZE_X, GPU_SIZE_Y}; // global domain size for our calculation
+  size_t local[2]  = {GPU_TILE_W, GPU_TILE_H}; // local domain size for our calculation
+  cl_int err;
+
+  cl_event kernel_event;
+  long t1, t2;
+  int gpu_accumulated_lines = 0;
+
+  for (unsigned it = 1; it <= nb_iter; it++) {
+
+    // Load balancing
+    if (gpu_duration != 0) {
+      if (much_greater_than (gpu_duration, cpu_duration) &&
+          gpu_y_part > GPU_TILE_H) {
+        gpu_y_part -= GPU_TILE_H;
+        cpu_y_part += GPU_TILE_H;
+        global[1] = gpu_y_part;
+      } else if (much_greater_than (cpu_duration, gpu_duration) &&
+                 cpu_y_part > GPU_TILE_H) {
+        gpu_y_part += GPU_TILE_H;
+        cpu_y_part -= GPU_TILE_H;
+        global[1] = gpu_y_part;
+      }
+    }
+
+    // Set kernel arguments
+    //
+    err = 0;
+    err |= clSetKernelArg(compute_kernel, 0, sizeof(cl_mem), &cur_buffer);
+    err |= clSetKernelArg(compute_kernel, 1, sizeof(cl_mem), &next_buffer);
+    err |= clSetKernelArg(compute_kernel, 2, sizeof(cl_mem), &term_buffer);
+    err |= clSetKernelArg (compute_kernel, 3, sizeof (unsigned), &cpu_y_part);
+    check(err, "Failed to set kernel arguments");
+
+    // Launch GPU kernel
+    err = clEnqueueNDRangeKernel(queue, compute_kernel, 2, NULL, global, local,
+                                  0, NULL, &kernel_event);
+    check(err, "Failed to execute kernel");
+    clFlush (queue);
+
+    t1 = what_time_is_it ();
+    // Compute CPU part
+    {
+      int change = 0;
+
+#pragma omp parallel for collapse(2) schedule(runtime) reduction(| : change)
+        for (int y = 1; y < cpu_y_part; y += TILE_H)
+          for (int x = 1; x < DIM - 1; x += TILE_W)
+            change |= do_tile(x + (x == 0), y + (y == 0),
+                          TILE_W - ((x + TILE_W == DIM) + (x == 0)),
+                          TILE_H - ((y + TILE_H == DIM) + (y == 0)),
+                          omp_get_thread_num());
+      ret = change;
+    }
+    // FIXME:
+    t2           = what_time_is_it ();
+    cpu_duration = t2 - t1;
+
+    clFinish(queue);
+
+    // Monitor
+    // FIXME:
+    gpu_duration = ocl_monitor(kernel_event, 0, cpu_y_part, global[0],
+                                global[1], TASK_TYPE_COMPUTE);
+    clReleaseEvent(kernel_event);
+
+    gpu_accumulated_lines += gpu_y_part;
+
+    // Swap buffers
+    {
+      cl_mem tmp  = cur_buffer;
+      cur_buffer  = next_buffer;
+      next_buffer = tmp;
+    }
+
+    // termination
+    if (countIter > checkTermIterm)
+    {
+      err = clEnqueueReadBuffer(queue, term_buffer, CL_TRUE, 0, DIM * DIM * sizeof(TYPE), tmpTab, 0, NULL, NULL);
+      check(err, "Failed to read buffer from GPU");
+
+      bool notChange = true;
+      for (size_t i = DIM * cpu_y_part; i < DIM * DIM; i++)
+        if (tmpTab[i] != 0)
+        {
+          notChange = false;
+          break;
+        }
+
+      if (notChange)
+      {
+        ret = 1;
+        break;
+      }
+      countIter = 1;
+    }
+    else countIter++;
+  }
+
+  // clFinish(queue);
+
+  if (do_display) {
+    // Send CPU contribution to GPU memory
+    err = clEnqueueWriteBuffer (queue, cur_buffer, CL_TRUE, 0,
+                                DIM * cpu_y_part * sizeof (unsigned), image, 0,
+                                NULL, NULL);
+    check (err, "Failed to write to buffer");
+  } else
+    PRINT_DEBUG ('u', "In average, GPU took %.1f%% of the lines\n",
+                 (float)gpu_accumulated_lines * 100 / (DIM * nb_iter));
+
+  free(tmpTab);
+
+  return ret;
+}
+#pragma endregion ssandOpenCLOpenMp
+
 #pragma endregion synchronousKernel
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1436,7 +1595,7 @@ void ssandPile_refresh_img_mpi()
   //processus ouvrier
   else
   {
-    int borderSize = DIM/size;
+    // int borderSize = DIM/size;
     if(rank%2==0)
     {
       //processus pair --> send ; compute? ; receive
@@ -1447,7 +1606,6 @@ void ssandPile_refresh_img_mpi()
       if(rank!=size-1)
       {
         MPI_Send(&table(in, 0, rankDown(rank)), sizeof(int)*DIM, MPI_INT, rank+1, 0, MPI_COMM_WORLD);
-        printf("");
       }
 
       //compute ?
@@ -1481,6 +1639,7 @@ void ssandPile_refresh_img_mpi()
 int ssandPile_do_tile_mpi(int x, int y, int width, int height)
 {
   //same as refresh_img_mpi ????
+  return 0;
 }
 
 unsigned ssandPile_compute_mpi(unsigned nb_iter)

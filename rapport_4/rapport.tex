@@ -36,9 +36,9 @@
 
 \subsection{4.7.3 Detecting termination}
 
-Pour implemnter la terminaison j'ai commancer par ajouter un nouveau kernel ocl qui prend en parametre
-un buffer pour la terminaison. Je remplie ce buffer avec 1 si il y a eu
-un changement et 0 sinon. C'est la ligne 13 du code ci-dessous :
+Pour implémenter la terminaison, j'ai commencé par ajouter un nouveau kernel ocl qui prend en paramètre
+un buffer pour la terminaison. Je remplis ce buffer avec 1 s'il y a eu un changement et 0 sinon.
+C'est la ligne 13 du code ci-dessous :
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -48,10 +48,10 @@ un changement et 0 sinon. C'est la ligne 13 du code ci-dessous :
     lastline=15
 ]{c}{codes/ssand_ocl_term.c}
 
-Puis j'ai ajouter la la fonction \emph{ssandPile\_invoke\_ocl\_term()}
-en m'inspirent de la fonction \emph{ocl\_invoke\_kernel\_generic()}.
-Les changement que j'ai apporter sont :\\
-\indent - un buffer nommer \emph{term\_buffer} que je passe en parametre au kernel ocl :
+Puis j'ai ajouté la fonction \emph{ssandPile\_invoke\_ocl\_term()}
+en m'inspirant de la fonction \emph{ocl\_invoke\_kernel\_generic()}.
+Les changements que j'ai apporté sont :\\
+\indent - un buffer nommé \emph{term\_buffer} que je passe en paramètre au kernel ocl :
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -61,8 +61,8 @@ Les changement que j'ai apporter sont :\\
     lastline=20
 ]{c}{codes/ssand_ocl_term.c}
 
-\indent - 2 variables pour controller l'intervale d'iterations ou
-on verifie si l'êtats du tas de sable est stable.
+\indent - 2 variables pour contrôler l'intervalle d'itérations où
+on vérifie si l'états du tas de sable est stable.
 
 \inputminted[
     frame=lines,
@@ -73,8 +73,8 @@ on verifie si l'êtats du tas de sable est stable.
     lastline=18
 ]{c}{codes/ssand_ocl_term.c}
 
-\indent - la copie du beffeur en ram avec la verification que le
-buffer soit remplie de 0. Qu'il n'y est pas eu de changement.
+\indent - la copie du buffer en ram avec la vérification que le
+buffer soit remplie de 0. Qu'il n'y ait pas eu de changement.
 \inputminted[
     frame=lines,
     framesep=2mm,
@@ -83,17 +83,16 @@ buffer soit remplie de 0. Qu'il n'y est pas eu de changement.
     firstline=21
 ]{c}{codes/ssand_ocl_term.c}
 
-La terminaison fonctionne bien j'obtient presque le même d'itération que
-la version sequentielle (~ +20 iterations).
+La terminaison fonctionne bien, j'obtiens presque le même nombre d'itérations que
+la version séquentielle (~ +20 itérations).
 
 \subsection{4.7.4 OpenCL + OpenMP Implementation}
 
-J'ai essayer d'implemnter la version \emph{GPU + OpenMP} mais je n'ai
-pas reussi a l'implemnter a temps. Ma version a des problémes avec
-la bordure du calcule entre le GPU et le CPU. Cour corrijer il faudrai
-que je partage quelque lignes de calcule entre les 2.
-Sur l'image suivante on peut voir le probleme de partage :
-
+J'ai essayé d'implémenter la version \emph{GPU + OpenMP} mais je n'ai
+pas réussi à l'implémenter à temps. Ma version a des problèmes avec
+la bordure du calcul entre le GPU et le CPU. Pour corriger, il faudrait
+que je partage quelque lignes de calcul entre les 2.
+Sur l'image suivante on peut voir le problème de partage :
 
 \begin{figure}[H]
   \centering

@@ -1,0 +1,103 @@
+\documentclass[10pt, a4paper]{article}
+
+\include{includes}
+
+\title{PaP}
+\author{GOEDEFROIT Charles}
+
+% remove section number
+\setcounter{secnumdepth}{0}
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \ {} % important
+  \vfill
+  \vspace{1cm}
+  {\scshape\LARGE\MyTitle\par}
+  \vspace{0.5cm}
+  {\huge\bfseries Projet : rapport4\par}
+  \vspace{0.5cm}
+  {\Large 4TIN804U\par}
+  \vspace{1cm}
+  \MyAuthor
+  \vfill
+  {\large2021-2022\par}
+\end{titlepage}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{4.7 OpenCL Implementation}
+
+\subsection{4.7.3 Detecting termination}
+
+Pour implemnter la terminaison j'ai commancer par ajouter un nouveau kernel ocl qui prend en parametre
+un buffer pour la terminaison. Je remplie ce buffer avec 1 si il y a eu
+un changement et 0 sinon. C'est la ligne 13 du code ci-dessous :
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    linenos,
+    lastline=15
+]{c}{codes/ssand_ocl_term.c}
+
+Puis j'ai ajouter la la fonction \emph{ssandPile\_invoke\_ocl\_term()}
+en m'inspirent de la fonction \emph{ocl\_invoke\_kernel\_generic()}.
+Les changement que j'ai apporter sont :\\
+\indent - un buffer nommer \emph{term\_buffer} que je passe en parametre au kernel ocl :
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    firstline=20,
+    lastline=20
+]{c}{codes/ssand_ocl_term.c}
+
+\indent - 2 variables pour controller l'intervale d'iterations ou
+on verifie si l'êtats du tas de sable est stable.
+
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    firstline=17,
+    lastline=18
+]{c}{codes/ssand_ocl_term.c}
+
+\indent - la copie du beffeur en ram avec la verification que le
+buffer soit remplie de 0. Qu'il n'y est pas eu de changement.
+\inputminted[
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    fontsize=\footnotesize,
+    firstline=21
+]{c}{codes/ssand_ocl_term.c}
+
+La terminaison fonctionne bien j'obtient presque le même d'itération que
+la version sequentielle (~ +20 iterations).
+
+\subsection{4.7.4 OpenCL + OpenMP Implementation}
+
+J'ai essayer d'implemnter la version \emph{GPU + OpenMP} mais je n'ai
+pas reussi a l'implemnter a temps. Ma version a des problémes avec
+la bordure du calcule entre le GPU et le CPU. Cour corrijer il faudrai
+que je partage quelque lignes de calcule entre les 2.
+Sur l'image suivante on peut voir le probleme de partage :
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\linewidth]{dump-ssandPile-ocl_omp-dim-128-iter-200}
+  \caption{\small{ssandPile ocl\_omp size 128, iterations 200 }}
+\end{figure}
+\end{document}

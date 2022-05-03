@@ -643,7 +643,7 @@ void ssandPile_init_ocl_term(void)
 }
 
 static uint countIter = 0;
-static uint checkTermIterm = 1;
+static uint checkTermIterm = 20;
 unsigned ssandPile_invoke_ocl_term(unsigned nb_iter)
 {
   TYPE * tmpTab = calloc(DIM * DIM, sizeof(TYPE));
@@ -750,6 +750,7 @@ static int much_greater_than (long t1, long t2)
 // static uint checkTermIterm = 1;
 
 #define DIMENSION 2
+#define LOAD_BALANCING false
 
 // Suggested cmdline:
 // ./run -k ssandPile -o -v ocl_omp -m -ts 16
@@ -772,7 +773,7 @@ unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
   for (unsigned it = 1; it <= nb_iter; it++) {
 
     // Load balancing
-    if (gpu_duration != 0) {
+    if (LOAD_BALANCING && gpu_duration != 0) {
       if (much_greater_than (gpu_duration, cpu_duration) &&
           gpu_y_part > GPU_TILE_H) {
         gpu_y_part -= GPU_TILE_H;
@@ -866,10 +867,10 @@ unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
 
   if (do_display) {
     // Send CPU contribution to GPU memory
-    err = clEnqueueWriteBuffer (queue, cur_buffer, CL_TRUE, 0,
+    err = clEnqueueWriteBuffer(queue, cur_buffer, CL_TRUE, 0,
                                 DIM * cpu_y_part * sizeof (TYPE), &table(in,0,0), 0,
                                 NULL, NULL);
-    check (err, "Failed to write to buffer");
+    check(err, "Failed to write to buffer");
   } else
     PRINT_DEBUG ('u', "In average, GPU took %.1f%% of the lines\n",
                  (float)gpu_accumulated_lines * 100 / (DIM * nb_iter));

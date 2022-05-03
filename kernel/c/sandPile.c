@@ -749,22 +749,26 @@ static int much_greater_than (long t1, long t2)
 // static uint countIter = 0;
 // static uint checkTermIterm = 1;
 
+#define DIMENSION 2
+
 // Suggested cmdline:
 // ./run -k ssandPile -o -v ocl_omp -m -ts 16
 //
 unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
 {
+  // Vars
   TYPE * tmpTab = calloc(DIM * DIM, sizeof(TYPE));
   uint ret = 0;
 
-  size_t global[2] = {GPU_SIZE_X, gpu_y_part}; // global domain size for our calculation
-  size_t local[2]  = {GPU_TILE_W, GPU_TILE_H}; // local domain size for our calculation
+  size_t global[DIMENSION] = {GPU_SIZE_X, gpu_y_part}; // global domain size for our calculation
+  size_t local[DIMENSION]  = {GPU_TILE_W, GPU_TILE_H}; // local domain size for our calculation
   cl_int err;
 
   cl_event kernel_event;
-  long t1, t2;
+  long startTime, endTime;
   int gpu_accumulated_lines = 0;
 
+  // Iters
   for (unsigned it = 1; it <= nb_iter; it++) {
 
     // Load balancing
@@ -792,19 +796,20 @@ unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
     check(err, "Failed to set kernel arguments");
 
     // Launch GPU kernel
-    err = clEnqueueNDRangeKernel(queue, compute_kernel, 2, NULL, global, local,
+    err = clEnqueueNDRangeKernel(queue, compute_kernel, DIMENSION, NULL, global, local,
                                   0, NULL, &kernel_event);
     check(err, "Failed to execute kernel");
-    clFlush (queue);
+    clFlush(queue); // submit all commands
 
-    t1 = what_time_is_it ();
     // Compute CPU part
+    startTime = what_time_is_it();
+
     {
       int change = 0;
 
 #pragma omp parallel for collapse(2) schedule(runtime) reduction(| : change)
-        for (int y = 1; y < cpu_y_part; y += TILE_H)
-          for (int x = 1; x < DIM - 1; x += TILE_W)
+        for (int y = 0; y < cpu_y_part; y += TILE_H)
+          for (int x = 0; x < DIM - 1; x += TILE_W)
             change |= do_tile(x + (x == 0), y + (y == 0),
                           TILE_W - ((x + TILE_W == DIM) + (x == 0)),
                           TILE_H - ((y + TILE_H == DIM) + (y == 0)),
@@ -812,9 +817,10 @@ unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
       ret = !change;
     }
 
-    t2           = what_time_is_it ();
-    cpu_duration = t2 - t1;
+    endTime = what_time_is_it ();
+    cpu_duration = endTime - startTime;
 
+    // Wait all GPU command finish
     clFinish(queue);
 
     // Monitor
@@ -861,7 +867,7 @@ unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
   if (do_display) {
     // Send CPU contribution to GPU memory
     err = clEnqueueWriteBuffer (queue, cur_buffer, CL_TRUE, 0,
-                                DIM * cpu_y_part * sizeof (unsigned), image, 0,
+                                DIM * cpu_y_part * sizeof (TYPE), &table(in,0,0), 0,
                                 NULL, NULL);
     check (err, "Failed to write to buffer");
   } else
@@ -871,6 +877,23 @@ unsigned ssandPile_invoke_ocl_omp(unsigned nb_iter)
   free(tmpTab);
 
   return ret;
+}
+
+void printTableDebug() {
+  for (int i = 0; i < DIM; i++)
+  {
+    for (int j = 0; j < DIM; j++)
+      printf("%d", TABLE[i * DIM + j]);
+    printf("\n");
+  }
+  printf("\033[0;0H");
+
+  for (int i = 0; i < DIM; i++)
+  {
+    for (int j = 0; j < DIM; j++)
+      printf("\033[%d;%dH%d\n", i + 5, DIM + 4 + j, TABLE[i * DIM + j]);
+    printf("\n");
+  }
 }
 #pragma endregion ssandOpenCLOpenMp
 
